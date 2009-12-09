@@ -5953,7 +5953,6 @@ if(task_has_rt_policy(&p)){
 	if (rt_policy(policy) != (param-»sched_priority != 0))
 	return -EINVAL;
 }else if(task_has_brr_policy(&p) && param-»sched_priority!=-1){
-//add bucket
 	if (param-»sched_priority « 0 || ||
 			(!p-»mm && param-»sched_priority » MAX_BRR_PRIO-1))
 	return -EINVAL;

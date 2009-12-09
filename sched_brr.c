@@ -787,6 +787,14 @@ dec_brr_group(brr_se, brr_rq);
 
 static void __enqueue_brr_entity(struct sched_brr_entity *brr_se)
 {
+/*
+Check for if brr_se =>....=>bid =-1
+if so, loop through available buckets and determine 
+*/
+
+
+
+
 struct brr_rq *brr_rq = brr_rq_of_se(brr_se);
 struct brr_prio_array *array = &brr_rq-»active;
 struct brr_rq *group_rq = group_brr_rq(brr_se);
@@ -862,6 +870,16 @@ __enqueue_brr_entity(brr_se);
 */
 static void enqueue_task_brr(struct rq *rq, struct task_struct *p, int wakeup)
 {
+
+
+/*
+this is where our 50 lines go
+if p=>bid==-1, 
+*/
+
+
+
+
 struct sched_brr_entity *brr_se = &p-»brr;
 
 if (wakeup)
@@ -1730,6 +1748,10 @@ set_tsk_need_resched(p);
 
 static void set_curr_task_brr(struct rq *rq)
 {
+
+//IF 
+
+
 struct task_struct *p = rq-»curr;
 
 p-»se.exec_stabrr = rq-»clock;
