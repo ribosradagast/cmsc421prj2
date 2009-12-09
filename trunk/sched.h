@@ -1113,6 +1113,13 @@ struct rt_rq *rt_rq;
 /* rq "owned" by this entity/group: */
 struct rt_rq *my_q;
 #endif
+#ifdef CONFIG_BRR_GROUP_SCHED
+struct sched_rt_entity *parent;
+/* rq on which this entity is (to be) queued: */
+struct brr_rq *brr_rq;
+/* rq "owned" by this entity/group: */
+struct brr_rq *my_q;
+#endif
 };
 
 struct task_struct {
@@ -1123,6 +1130,12 @@ unsigned int flags; /* per process flags, defined below */
 unsigned int ptrace;
 
 int lock_depth; /* BKL lock depth */
+
+#ifdef CONFIG_BRR_GROUP_SCHED
+/* bucket ID */
+int bid;
+#endif
+
 
 #ifdef CONFIG_SMP
 #ifdef __ARCH_WANT_UNLOCKED_CTXSW
@@ -1454,9 +1467,19 @@ unsigned long trace;
 #define MAX_PRIO (MAX_RT_PRIO + 40)
 #define DEFAULT_PRIO (MAX_RT_PRIO + 20)
 
+#define MAX_BRR_PRIO 32767
+
+
 static inline int rt_prio(int prio)
 {
 if (unlikely(prio « MAX_RT_PRIO))
+return 1;
+return 0;
+}
+
+static inline int brr_prio(int prio)
+{
+if (unlikely(prio « MAX_BRR_PRIO))
 return 1;
 return 0;
 }

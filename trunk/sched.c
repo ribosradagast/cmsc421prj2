@@ -150,7 +150,7 @@ sg-»reciprocal_cpu_power = reciprocal_value(sg-»__cpu_power);
 
 static inline int rt_policy(int policy)
 {
-if (unlikely(policy == SCHED_FIFO || policy == SCHED_RR))
+if (unlikely(policy == SCHED_FIFO || policy == SCHED_RR || policy == SCHED_BRR ))
 return 1;
 return 0;
 }
@@ -160,12 +160,32 @@ static inline int task_has_rt_policy(struct task_struct *p)
 return rt_policy(p-»policy);
 }
 
+static inline int brr_policy(int policy)
+{
+if (unlikely(policy == SCHED_BRR ))
+return 1;
+return 0;
+}
+
+static inline int task_has_brr_policy(struct task_struct *p)
+{
+return brr_policy(p-»policy);
+}
+
 /*
 * This is the priority-queue data structure of the RT scheduling class:
 */
 struct rt_prio_array {
 DECLARE_BITMAP(bitmap, MAX_RT_PRIO+1); /* include 1 bit for delimiter */
 struct list_head queue[MAX_RT_PRIO];
+};
+
+/*
+* This is the priority-queue data structure of the BRR scheduling class:
+*/
+struct brr_prio_array {
+DECLARE_BITMAP(bitmap, MAX_BRR_PRIO+1); /* include 1 bit for delimiter */
+struct list_head queue[MAX_BRR_PRIO];
 };
 
 struct rt_bandwidth {
@@ -249,12 +269,21 @@ HRTIMER_MODE_ABS, 0);
 spin_unlock(&rt_b-»rt_runtime_lock);
 }
 
-#ifdef CONFIG_RT_GROUP_SCHED
+#ifdef CONFIG_RT_GROUP_SCHED 
 static void destroy_rt_bandwidth(struct rt_bandwidth *rt_b)
 {
 hrtimer_cancel(&rt_b-»rt_period_timer);
 }
 #endif
+
+#ifdef  CONFIG_BRR_GROUP_SCHED
+static void destroy_rt_bandwidth(struct rt_bandwidth *rt_b)
+{
+hrtimer_cancel(&rt_b-»rt_period_timer);
+}
+#endif
+
+
 
 /*
 * sched_domains_mutex serializes calls to arch_init_sched_domains,
@@ -288,9 +317,16 @@ struct cfs_rq **cfs_rq;
 unsigned long shares;
 #endif
 
-#ifdef CONFIG_RT_GROUP_SCHED
+#ifdef CONFIG_RT_GROUP_SCHED 
 struct sched_rt_entity **rt_se;
 struct rt_rq **rt_rq;
+
+struct rt_bandwidth rt_bandwidth;
+#endif
+
+#ifdef CONFIG_BRR_GROUP_SCHED
+struct sched_brr_entity **brr_se;
+struct brr_rq **brr_rq;
 
 struct rt_bandwidth rt_bandwidth;
 #endif
@@ -329,6 +365,11 @@ static DEFINE_PER_CPU(struct cfs_rq, init_cfs_rq) ____cacheline_aligned_in_smp;
 static DEFINE_PER_CPU(struct sched_rt_entity, init_sched_rt_entity);
 static DEFINE_PER_CPU(struct rt_rq, init_rt_rq) ____cacheline_aligned_in_smp;
 #endif /* CONFIG_RT_GROUP_SCHED */
+
+#ifdef CONFIG_BRR_GROUP_SCHED
+static DEFINE_PER_CPU(struct sched_brr_entity, init_sched_brr_entity);
+static DEFINE_PER_CPU(struct brr_rq, init_brr_rq) ____cacheline_aligned_in_smp;
+#endif /* CONFIG_BRR_GROUP_SCHED */
 #else /* !CONFIG_USER_SCHED */
 #define root_task_group init_task_group
 #endif /* CONFIG_USER_SCHED */
@@ -400,6 +441,11 @@ p-»se.parent = task_group(p)-»se[cpu];
 #ifdef CONFIG_RT_GROUP_SCHED
 p-»rt.rt_rq  = task_group(p)-»rt_rq[cpu];
 p-»rt.parent = task_group(p)-»rt_se[cpu];
+#endif
+
+#ifdef CONFIG_BRR_GROUP_SCHED
+p-»brr.brr_rq  = task_group(p)-»brr_rq[cpu];
+p-»brr.parent = task_group(p)-»brr_se[cpu];
 #endif
 }
 
@@ -517,6 +563,40 @@ struct sched_rt_entity *rt_se;
 #endif
 };
 
+/* Bucket Round Robin's classes' related field in a runqueue: */
+struct brr_rq {
+struct brr_prio_array active;
+unsigned long brr_nr_running;
+#if defined CONFIG_SMP || defined CONFIG_RT_GROUP_SCHED
+struct {
+int curr; /* highest queued rt task prio */
+#ifdef CONFIG_SMP
+int next; /* next highest */
+#endif
+} highest_prio;
+#endif
+#ifdef CONFIG_SMP
+unsigned long brr_nr_migratory;
+unsigned long brr_nr_total;
+int overloaded;
+struct plist_head pushable_tasks;
+#endif
+int brr_throttled;
+u64 brr_time;
+u64 brr_runtime;
+/* Nests inside the rq lock: */
+spinlock_t brr_runtime_lock;
+
+#ifdef CONFIG_BRR_GROUP_SCHED
+unsigned long brr_nr_boosted;
+
+struct rq *rq;
+struct list_head leaf_rt_rq_list;
+struct task_group *tg;
+struct sched_rt_entity *rt_se;
+#endif
+};
+
 #ifdef CONFIG_SMP
 
 /*
@@ -588,6 +668,7 @@ u64 nr_switches;
 
 struct cfs_rq cfs;
 struct rt_rq rt;
+struct brr_rq brr;
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
 /* list of leaf cfs_rq on this cpu: */
@@ -595,6 +676,9 @@ struct list_head leaf_cfs_rq_list;
 #endif
 #ifdef CONFIG_RT_GROUP_SCHED
 struct list_head leaf_rt_rq_list;
+#endif
+#ifdef CONFIG_BRR_GROUP_SCHED
+struct list_head leaf_brr_rq_list;
 #endif
 
 /*
@@ -1447,7 +1531,7 @@ static inline void dec_cpu_load(struct rq *rq, unsigned long load)
 update_load_sub(&rq-»load, load);
 }
 
-#if (defined(CONFIG_SMP) && defined(CONFIG_FAIR_GROUP_SCHED)) || defined(CONFIG_RT_GROUP_SCHED)
+#if (defined(CONFIG_SMP) && defined(CONFIG_FAIR_GROUP_SCHED)) || defined(CONFIG_RT_GROUP_SCHED)|| defined(CONFIG_BRR_GROUP_SCHED)
 typedef int (*tg_visitor)(struct task_group *, void *);
 
 /*
@@ -1733,6 +1817,7 @@ cfs_rq-»shares = shares;
 #include "sched_idletask.c"
 #include "sched_fair.c"
 #include "sched_rt.c"
+#include "sched_brr.c"
 #ifdef CONFIG_SCHED_DEBUG
 # include "sched_debug.c"
 #endif
@@ -1753,23 +1838,29 @@ rq-»nr_running--;
 
 static void set_load_weight(struct task_struct *p)
 {
-if (task_has_rt_policy(p)) {
-p-»se.load.weight = prio_to_weight[0] * 2;
-p-»se.load.inv_weight = prio_to_wmult[0] »» 1;
-return;
-}
+	if (task_has_rt_policy(p)) {
+		p-»se.load.weight = prio_to_weight[0] * 2;
+		p-»se.load.inv_weight = prio_to_wmult[0] »» 1;
+		return;
+	}
+	if (task_has_brr_policy(p)) {
+		p-»se.load.weight = prio_to_weight[0] * 2;
+		p-»se.load.inv_weight = prio_to_wmult[0] »» 1;
+		return;
+	}
 
-/*
+
+	/*
 * SCHED_IDLE tasks get minimal weight:
 */
-if (p-»policy == SCHED_IDLE) {
-p-»se.load.weight = WEIGHT_IDLEPRIO;
-p-»se.load.inv_weight = WMULT_IDLEPRIO;
-return;
-}
+	if (p-»policy == SCHED_IDLE) {
+		p-»se.load.weight = WEIGHT_IDLEPRIO;
+		p-»se.load.inv_weight = WMULT_IDLEPRIO;
+		return;
+	}
 
-p-»se.load.weight = prio_to_weight[p-»static_prio - MAX_RT_PRIO];
-p-»se.load.inv_weight = prio_to_wmult[p-»static_prio - MAX_RT_PRIO];
+	p-»se.load.weight = prio_to_weight[p-»static_prio - MAX_RT_PRIO];
+	p-»se.load.inv_weight = prio_to_wmult[p-»static_prio - MAX_RT_PRIO];
 }
 
 static void update_avg(u64 *avg, u64 sample)
@@ -1827,6 +1918,8 @@ int prio;
 
 if (task_has_rt_policy(p))
 prio = MAX_RT_PRIO-1 - p-»rt_priority;
+else if (task_has_brr_policy(p))
+prio = MAX_BRR_PRIO-1 - p-»brr_priority;
 else
 prio = __normal_prio(p);
 return prio;
@@ -1847,7 +1940,7 @@ p-»normal_prio = normal_prio(p);
 * keep the priority unchanged. Otherwise, update priority
 * to the normal priority:
 */
-if (!rt_prio(p-»prio))
+if (!rt_prio(p-»prio)&&!brr_prio(p-»prio))
 return p-»normal_prio;
 return p-»prio;
 }
@@ -2498,7 +2591,11 @@ p-»se.slice_max = 0;
 p-»se.wait_max = 0;
 #endif
 
+if task_has_rt_policy(&p){
 INIT_LIST_HEAD(&p-»rt.run_list);
+}else{
+INIT_LIST_HEAD(&p-»rt.run_list);
+}
 p-»se.on_rq = 0;
 INIT_LIST_HEAD(&p-»se.group_node);
 
@@ -2533,7 +2630,7 @@ set_task_cpu(p, cpu);
 * Make sure we do not leak PI boosting priority to the child:
 */
 p-»prio = current-»normal_prio;
-if (!rt_prio(p-»prio))
+if (!rt_prio(p-»prio)||!brr_prio(p-»prio))
 p-»sched_class = &fair_sched_class;
 
 #if defined(CONFIG_SCHEDSTATS) || defined(CONFIG_TASK_DELAY_ACCT)
@@ -5586,8 +5683,11 @@ dequeue_task(rq, p, 0);
 if (running)
 p-»sched_class-»put_prev_task(rq, p);
 
+
 if (rt_prio(prio))
 p-»sched_class = &rt_sched_class;
+else if (brr_prio(prio))
+p-»sched_class = &brr_sched_class;
 else
 p-»sched_class = &fair_sched_class;
 
@@ -5625,7 +5725,7 @@ update_rq_clock(rq);
 * it wont have any effect on scheduling until the task is
 * SCHED_FIFO/SCHED_RR:
 */
-if (task_has_rt_policy(p)) {
+if (task_has_rt_policy(p)||task_has_brr_policy(p)) {
 p-»static_prio = NICE_TO_PRIO(nice);
 goto out_unlock;
 }
@@ -5719,7 +5819,11 @@ return 0;
 */
 int task_prio(const struct task_struct *p)
 {
+if(task_has_brr_policy(&p){
+return p-»prio - MAX_BRR_PRIO;
+}else{
 return p-»prio - MAX_RT_PRIO;
+}
 }
 
 /**
@@ -5776,10 +5880,25 @@ case SCHED_FIFO:
 case SCHED_RR:
 p-»sched_class = &rt_sched_class;
 break;
+case SCHED_BRR:
+p-»sched_class = &brr_sched_class;
+	/*  
+	We know that there are no errors
+If it's a BRR, 
+Take sched_param->sched_priority and assign it to the task's PID
+return 
+*/
+p-»bid = prio;
+p-»rt_priority = 0;
+p-»normal_prio = normal_prio(0);
+break;
 }
 
-p-»rt_priority = prio;
-p-»normal_prio = normal_prio(p);
+if(!task_has_brr_policy(&p))
+{
+	p-»rt_priority = prio;
+	p-»normal_prio = normal_prio(p);
+}
 /* we are holding p-»pi_lock already */
 p-»prio = rt_mutex_getprio(p);
 set_load_weight(p);
@@ -5804,123 +5923,144 @@ return match;
 static int __sched_setscheduler(struct task_struct *p, int policy,
 struct sched_param *param, bool user)
 {
-int retval, oldprio, oldpolicy = -1, on_rq, running;
-unsigned long flags;
-const struct sched_class *prev_class = p-»sched_class;
-struct rq *rq;
+	int retval, oldprio, oldpolicy = -1, on_rq, running;
+	unsigned long flags;
+	const struct sched_class *prev_class = p-»sched_class;
+	struct rq *rq;
 
-/* may grab non-irq protected spin_locks */
-BUG_ON(in_interrupt());
+	/* may grab non-irq protected spin_locks */
+	BUG_ON(in_interrupt());
 recheck:
-/* double check policy once rq lock held */
-if (policy « 0)
-policy = oldpolicy = p-»policy;
-else if (policy != SCHED_FIFO && policy != SCHED_RR &&
-policy != SCHED_NORMAL && policy != SCHED_BATCH &&
-policy != SCHED_IDLE)
-return -EINVAL;
-/*
+	/* double check policy once rq lock held */
+	if (policy « 0)
+	policy = oldpolicy = p-»policy;
+	else if (policy != SCHED_FIFO && policy != SCHED_RR &&
+			policy != SCHED_NORMAL && policy != SCHED_BATCH &&
+			policy != SCHED_IDLE && policy != SCHED_BRR)
+	return -EINVAL;
+	/*
 * Valid priorities for SCHED_FIFO and SCHED_RR are
 * 1..MAX_USER_RT_PRIO-1, valid priority for SCHED_NORMAL,
 * SCHED_BATCH and SCHED_IDLE is 0.
 */
-if (param-»sched_priority « 0 ||
-    (p-»mm && param-»sched_priority » MAX_USER_RT_PRIO-1) ||
-    (!p-»mm && param-»sched_priority » MAX_RT_PRIO-1))
-return -EINVAL;
-if (rt_policy(policy) != (param-»sched_priority != 0))
-return -EINVAL;
 
-/*
+if(task_has_rt_policy(&p)){
+
+	if (param-»sched_priority « 0 ||
+			(p-»mm && param-»sched_priority » MAX_USER_RT_PRIO-1) ||
+			(!p-»mm && param-»sched_priority » MAX_RT_PRIO-1))
+	return -EINVAL;
+	if (rt_policy(policy) != (param-»sched_priority != 0))
+	return -EINVAL;
+}else if(task_has_brr_policy(&p) && param-»sched_priority!=-1){
+//add bucket
+	if (param-»sched_priority « 0 || ||
+			(!p-»mm && param-»sched_priority » MAX_BRR_PRIO-1))
+	return -EINVAL;
+}
+
+	/*
 * Allow unprivileged RT tasks to decrease priority:
 */
-if (user && !capable(CAP_SYS_NICE)) {
-if (rt_policy(policy)) {
-unsigned long rlim_rtprio;
+	if (user && !capable(CAP_SYS_NICE)) {
+		if (rt_policy(policy)) {
+			unsigned long rlim_rtprio;
 
-if (!lock_task_sighand(p, &flags))
-return -ESRCH;
-rlim_rtprio = p-»signal-»rlim[RLIMIT_RTPRIO].rlim_cur;
-unlock_task_sighand(p, &flags);
+			if (!lock_task_sighand(p, &flags))
+			return -ESRCH;
+			rlim_rtprio = p-»signal-»rlim[RLIMIT_RTPRIO].rlim_cur;
+			unlock_task_sighand(p, &flags);
 
-/* can't set/change the rt policy */
-if (policy != p-»policy && !rlim_rtprio)
-return -EPERM;
+			/* can't set/change the rt policy */
+			if (policy != p-»policy && !rlim_rtprio)
+			return -EPERM;
 
-/* can't increase priority */
-if (param-»sched_priority » p-»rt_priority &&
-    param-»sched_priority » rlim_rtprio)
-return -EPERM;
-}
-/*
+			/* can't increase priority */
+			if (param-»sched_priority » p-»rt_priority &&
+					param-»sched_priority » rlim_rtprio)
+			return -EPERM;
+		}
+		/*
 * Like positive nice levels, dont allow tasks to
 * move out of SCHED_IDLE either:
 */
-if (p-»policy == SCHED_IDLE && policy != SCHED_IDLE)
-return -EPERM;
+		if (p-»policy == SCHED_IDLE && policy != SCHED_IDLE)
+		return -EPERM;
 
-/* can't change other user's priorities */
-if (!check_same_owner(p))
-return -EPERM;
-}
+		/* can't change other user's priorities */
+		if (!check_same_owner(p))
+		return -EPERM;
+	}
 
-if (user) {
+	if (user) {
 #ifdef CONFIG_RT_GROUP_SCHED
-/*
+		/*
 * Do not allow realtime tasks into groups that have no runtime
 * assigned.
 */
-if (rt_bandwidth_enabled() && rt_policy(policy) &&
-task_group(p)-»rt_bandwidth.rt_runtime == 0)
-return -EPERM;
+		if (rt_bandwidth_enabled() && rt_policy(policy) &&
+				task_group(p)-»rt_bandwidth.rt_runtime == 0)
+		return -EPERM;
 #endif
 
-retval = security_task_setscheduler(p, policy, param);
-if (retval)
-return retval;
-}
+#ifdef CONFIG_BRR_GROUP_SCHED
+		/*
+* Do not allow realtime tasks into groups that have no runtime
+* assigned.
+*/
+		if (rt_bandwidth_enabled() && brr_policy(policy) &&
+				task_group(p)-»rt_bandwidth.rt_runtime == 0)
+		return -EPERM;
+#endif
 
-/*
+		retval = security_task_setscheduler(p, policy, param);
+		if (retval)
+		return retval;
+	}
+
+	/*
 * make sure no PI-waiters arrive (or leave) while we are
 * changing the priority of the task:
 */
-spin_lock_irqsave(&p-»pi_lock, flags);
-/*
+	spin_lock_irqsave(&p-»pi_lock, flags);
+	/*
 * To be able to change p-»policy safely, the apropriate
 * runqueue lock must be held.
 */
-rq = __task_rq_lock(p);
-/* recheck policy now with rq lock held */
-if (unlikely(oldpolicy != -1 && oldpolicy != p-»policy)) {
-policy = oldpolicy = -1;
-__task_rq_unlock(rq);
-spin_unlock_irqrestore(&p-»pi_lock, flags);
-goto recheck;
-}
-update_rq_clock(rq);
-on_rq = p-»se.on_rq;
-running = task_current(rq, p);
-if (on_rq)
-deactivate_task(rq, p, 0);
-if (running)
-p-»sched_class-»put_prev_task(rq, p);
+	rq = __task_rq_lock(p);
+	/* recheck policy now with rq lock held */
+	if (unlikely(oldpolicy != -1 && oldpolicy != p-»policy)) {
+		policy = oldpolicy = -1;
+		__task_rq_unlock(rq);
+		spin_unlock_irqrestore(&p-»pi_lock, flags);
+		goto recheck;
+	}
+	update_rq_clock(rq);
+	on_rq = p-»se.on_rq;
+	running = task_current(rq, p);
+	if (on_rq)
+	deactivate_task(rq, p, 0);
+	if (running)
+	p-»sched_class-»put_prev_task(rq, p);
 
-oldprio = p-»prio;
-__setscheduler(rq, p, policy, param-»sched_priority);
+	oldprio = p-»prio;
+	__setscheduler(rq, p, policy, param-»sched_priority);
 
-if (running)
-p-»sched_class-»set_curr_task(rq);
-if (on_rq) {
-activate_task(rq, p, 0);
+	if (running)
+	p-»sched_class-»set_curr_task(rq);
+	if (on_rq) {
+		activate_task(rq, p, 0);
 
-check_class_changed(rq, p, prev_class, oldprio, running);
-}
-__task_rq_unlock(rq);
-spin_unlock_irqrestore(&p-»pi_lock, flags);
+		check_class_changed(rq, p, prev_class, oldprio, running);
+	}
+	__task_rq_unlock(rq);
+	spin_unlock_irqrestore(&p-»pi_lock, flags);
 
-rt_mutex_adjust_pi(p);
+	rt_mutex_adjust_pi(p);
 
-return 0;
+	
+	
+	return 0;
 }
 
 /**
@@ -6376,6 +6516,7 @@ int ret = -EINVAL;
 switch (policy) {
 case SCHED_FIFO:
 case SCHED_RR:
+case SCHED_BRR:
 ret = MAX_USER_RT_PRIO-1;
 break;
 case SCHED_NORMAL:
@@ -6422,49 +6563,49 @@ return ret;
 SYSCALL_DEFINE2(sched_rr_get_interval, pid_t, pid,
 struct timespec __user *, interval)
 {
-struct task_struct *p;
-unsigned int time_slice;
-int retval;
-struct timespec t;
+	struct task_struct *p;
+	unsigned int time_slice;
+	int retval;
+	struct timespec t;
 
-if (pid « 0)
-return -EINVAL;
+	if (pid « 0)
+	return -EINVAL;
 
-retval = -ESRCH;
-read_lock(&tasklist_lock);
-p = find_process_by_pid(pid);
-if (!p)
-goto out_unlock;
+	retval = -ESRCH;
+	read_lock(&tasklist_lock);
+	p = find_process_by_pid(pid);
+	if (!p)
+	goto out_unlock;
 
-retval = security_task_getscheduler(p);
-if (retval)
-goto out_unlock;
+	retval = security_task_getscheduler(p);
+	if (retval)
+	goto out_unlock;
 
-/*
+	/*
 * Time slice is 0 for SCHED_FIFO tasks and for SCHED_OTHER
 * tasks that are on an otherwise idle runqueue:
 */
-time_slice = 0;
-if (p-»policy == SCHED_RR) {
-time_slice = DEF_TIMESLICE;
-} else if (p-»policy != SCHED_FIFO) {
-struct sched_entity *se = &p-»se;
-unsigned long flags;
-struct rq *rq;
+	time_slice = 0;
+	if (p-»policy == SCHED_RR) {
+		time_slice = DEF_TIMESLICE;
+	} else if (p-»policy != SCHED_FIFO) {
+		struct sched_entity *se = &p-»se;
+		unsigned long flags;
+		struct rq *rq;
 
-rq = task_rq_lock(p, &flags);
-if (rq-»cfs.load.weight)
-time_slice = NS_TO_JIFFIES(sched_slice(&rq-»cfs, se));
-task_rq_unlock(rq, &flags);
-}
-read_unlock(&tasklist_lock);
-jiffies_to_timespec(time_slice, &t);
-retval = copy_to_user(interval, &t, sizeof(t)) ? -EFAULT : 0;
-return retval;
+		rq = task_rq_lock(p, &flags);
+		if (rq-»cfs.load.weight)
+		time_slice = NS_TO_JIFFIES(sched_slice(&rq-»cfs, se));
+		task_rq_unlock(rq, &flags);
+	}
+	read_unlock(&tasklist_lock);
+	jiffies_to_timespec(time_slice, &t);
+	retval = copy_to_user(interval, &t, sizeof(t)) ? -EFAULT : 0;
+	return retval;
 
-out_unlock:
-read_unlock(&tasklist_lock);
-return retval;
+	out_unlock:
+	read_unlock(&tasklist_lock);
+	return retval;
 }
 
 static const char stat_nam[] = TASK_STATE_TO_CHAR_STR;
