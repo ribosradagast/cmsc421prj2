@@ -874,7 +874,10 @@ static void enqueue_task_brr(struct rq *rq, struct task_struct *p, int wakeup)
 
 /*
 this is where our 50 lines go
-if p=>bid==-1, 
+if p=>bid==-1, search through bitmap of "taken" slots ie 
+int bitmap = int[maxintvalue];
+until we find a 0, then set p=>bid to i
+set bitmap[i]=1
 */
 
 
