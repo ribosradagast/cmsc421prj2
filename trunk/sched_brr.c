@@ -1767,7 +1767,7 @@ dequeue_pushable_task(rq, p);
 }
 
 static const struct sched_class brr_sched_class = {
-.next = &fair_sched_class,
+.next = &rt_sched_class,
 .enqueue_task = enqueue_task_rt,
 .dequeue_task = dequeue_task_rt,
 .yield_task = yield_task_rt,
