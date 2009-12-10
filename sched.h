@@ -2357,7 +2357,7 @@ extern void sched_move_task(struct task_struct *tsk);
 extern int sched_group_set_shares(struct task_group *tg, unsigned long shares);
 extern unsigned long sched_group_shares(struct task_group *tg);
 #endif
-#ifdef CONFIG_RT_GROUP_SCHED
+#ifdef CONFIG_RT_GROUP_SCHED || defined CONFIG_BRR_GROUP_SCHED
 extern int sched_group_set_rt_runtime(struct task_group *tg,
       long rt_runtime_us);
 extern long sched_group_rt_runtime(struct task_group *tg);

@@ -302,41 +302,41 @@ static LIST_HEAD(task_groups);
 /* task group related information */
 struct task_group {
 #ifdef CONFIG_CGROUP_SCHED
-struct cgroup_subsys_state css;
+	struct cgroup_subsys_state css;
 #endif
 
 #ifdef CONFIG_USER_SCHED
-uid_t uid;
+	uid_t uid;
 #endif
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
-/* schedulable entities of this group on each cpu */
-struct sched_entity **se;
-/* runqueue "owned" by this group on each cpu */
-struct cfs_rq **cfs_rq;
-unsigned long shares;
+	/* schedulable entities of this group on each cpu */
+	struct sched_entity **se;
+	/* runqueue "owned" by this group on each cpu */
+	struct cfs_rq **cfs_rq;
+	unsigned long shares;
 #endif
 
 #ifdef CONFIG_RT_GROUP_SCHED 
-struct sched_rt_entity **rt_se;
-struct rt_rq **rt_rq;
+	struct sched_rt_entity **rt_se;
+	struct rt_rq **rt_rq;
 
-struct rt_bandwidth rt_bandwidth;
+	struct rt_bandwidth rt_bandwidth;
 #endif
 
 #ifdef CONFIG_BRR_GROUP_SCHED
-struct sched_brr_entity **brr_se;
-struct brr_rq **brr_rq;
+	struct sched_rt_entity **brr_se;
+	struct brr_rq **brr_rq;
 
-struct rt_bandwidth rt_bandwidth;
+	struct rt_bandwidth rt_bandwidth;
 #endif
 
-struct rcu_head rcu;
-struct list_head list;
+	struct rcu_head rcu;
+	struct list_head list;
 
-struct task_group *parent;
-struct list_head siblings;
-struct list_head children;
+	struct task_group *parent;
+	struct list_head siblings;
+	struct list_head children;
 };
 
 #ifdef CONFIG_USER_SCHED
@@ -367,7 +367,7 @@ static DEFINE_PER_CPU(struct rt_rq, init_rt_rq) ____cacheline_aligned_in_smp;
 #endif /* CONFIG_RT_GROUP_SCHED */
 
 #ifdef CONFIG_BRR_GROUP_SCHED
-static DEFINE_PER_CPU(struct sched_brr_entity, init_sched_brr_entity);
+static DEFINE_PER_CPU(struct sched_rt_entity, init_sched_brr_entity);
 static DEFINE_PER_CPU(struct brr_rq, init_brr_rq) ____cacheline_aligned_in_smp;
 #endif /* CONFIG_BRR_GROUP_SCHED */
 #else /* !CONFIG_USER_SCHED */
@@ -566,11 +566,15 @@ struct sched_rt_entity *rt_se;
 /* Bucket Round Robin's classes' related field in a runqueue: */
 struct brr_rq {
 /*
-TODO: add array for bucket-numofcontents
+array for bucket-numofcontents
+numInBucket[i] is the number of processes that have bucket id
+'i' (in bucket 'i')
 */
+int numInBucket[MAX_BRR_PRIO];
+
 struct brr_prio_array active;
 unsigned long brr_nr_running;
-#if defined CONFIG_SMP || defined CONFIG_RT_GROUP_SCHED
+#if defined CONFIG_SMP || defined CONFIG_BRR_GROUP_SCHED
 struct {
 int curr; /* highest queued rt task prio */
 #ifdef CONFIG_SMP
@@ -584,14 +588,14 @@ unsigned long brr_nr_total;
 int overloaded;
 struct plist_head pushable_tasks;
 #endif
-int brr_throttled;
-u64 brr_time;
-u64 brr_runtime;
+int rt_throttled;
+u64 rt_time;
+u64 rt_runtime;
 /* Nests inside the rq lock: */
-spinlock_t brr_runtime_lock;
+spinlock_t rt_runtime_lock;
 
 #ifdef CONFIG_BRR_GROUP_SCHED
-unsigned long brr_nr_boosted;
+unsigned long rt_nr_boosted;
 
 struct rq *rq;
 struct list_head leaf_rt_rq_list;
@@ -8931,13 +8935,18 @@ rt_rq-»rq = rq;
 
 static void init_brr_rq(struct brr_rq *brr_rq, struct rq *rq)
 {
-/*
-TODO:
-Insert  array for bucket num_contents
-*/
+
 
 struct brr_prio_array *array;
 int i;
+
+/*
+initialize  array for bucket num_contents
+*/
+for (i = 0; i « MAX_BRR_PRIO; i++) {
+numInBucket[i]=0;
+}
+
 
 array = &brr_rq-»active;
 for (i = 0; i « MAX_BRR_PRIO; i++) {
@@ -8959,13 +8968,13 @@ brr_rq-»overloaded = 0;
 plist_head_init(&rq-»brr.pushable_tasks, &rq-»lock);
 #endif
 
-brr_rq-»brr_time = 0;
-brr_rq-»brr_throttled = 0;
-brr_rq-»brr_runtime = 0;
-spin_lock_init(&brr_rq-»brr_runtime_lock);
+brr_rq-»rt_time = 0;
+brr_rq-»rt_throttled = 0;
+brr_rq-»rt_runtime = 0;
+spin_lock_init(&brr_rq-»rt_runtime_lock);
 
 #ifdef CONFIG_BRR_GROUP_SCHED
-brr_rq-»brr_nr_boosted = 0;
+brr_rq-»rt_nr_boosted = 0;
 brr_rq-»rq = rq;
 #endif
 }
@@ -9003,8 +9012,8 @@ se-»parent = parent;
 
 #ifdef CONFIG_BRR_GROUP_SCHED
 static void init_tg_brr_entry(struct task_group *tg, struct brr_rq *brr_rq,
-struct sched_brr_entity *brr_se, int cpu, int add,
-struct sched_brr_entity *parent)
+struct sched_rt_entity *brr_se, int cpu, int add,
+struct sched_rt_entity *parent)
 {
 struct rq *rq = cpu_rq(cpu);
 
@@ -9012,7 +9021,7 @@ tg-»brr_rq[cpu] = brr_rq;
 init_brr_rq(brr_rq, rq);
 brr_rq-»tg = tg;
 brr_rq-»brr_se = brr_se;
-brr_rq-»brr_runtime = tg-»brr_bandwidth.brr_runtime;
+brr_rq-»rt_runtime = tg-»rt_bandwidth.rt_runtime;
 if (add)
 list_add(&brr_rq-»leaf_brr_rq_list, &rq-»leaf_brr_rq_list);
 
@@ -9113,7 +9122,7 @@ ptr += nr_cpu_ids * sizeof(void **);
 init_task_group.rt_rq = (struct rt_rq **)ptr;
 ptr += nr_cpu_ids * sizeof(void **);
 
-#ifdef CONFIG_USER_SCHED
+#ifdef CONFIG_USER_SCHED || defined CONFIG_BRR_GROUP_SCHED
 root_task_group.rt_se = (struct sched_rt_entity **)ptr;
 ptr += nr_cpu_ids * sizeof(void **);
 
@@ -9121,21 +9130,7 @@ root_task_group.rt_rq = (struct rt_rq **)ptr;
 ptr += nr_cpu_ids * sizeof(void **);
 #endif /* CONFIG_USER_SCHED */
 #endif /* CONFIG_RT_GROUP_SCHED */
-#ifdef CONFIG_BRR_GROUP_SCHED
-init_task_group.brr_se = (struct sched_brr_entity **)ptr;
-ptr += nr_cpu_ids * sizeof(void **);
 
-init_task_group.brr_rq = (struct brr_rq **)ptr;
-ptr += nr_cpu_ids * sizeof(void **);
-
-#ifdef CONFIG_USER_SCHED
-root_task_group.brr_se = (struct sched_brr_entity **)ptr;
-ptr += nr_cpu_ids * sizeof(void **);
-
-root_task_group.brr_rq = (struct brr_rq **)ptr;
-ptr += nr_cpu_ids * sizeof(void **);
-#endif /* CONFIG_USER_SCHED */
-#endif /* CONFIG_RT_GROUP_SCHED */
 #ifdef CONFIG_CPUMASK_OFFSTACK
 for_each_possible_cpu(i) {
 per_cpu(load_balance_tmpmask, i) = (void *)ptr;
@@ -9151,7 +9146,7 @@ init_defrootdomain();
 init_rt_bandwidth(&def_rt_bandwidth,
 global_rt_period(), global_rt_runtime());
 
-#ifdef CONFIG_RT_GROUP_SCHED
+#ifdef CONFIG_RT_GROUP_SCHED || defined CONFIG_BRR_GROUP_SCHED
 init_rt_bandwidth(&init_task_group.rt_bandwidth,
 global_rt_period(), global_rt_runtime());
 #ifdef CONFIG_USER_SCHED
@@ -9159,19 +9154,6 @@ init_rt_bandwidth(&root_task_group.rt_bandwidth,
 global_rt_period(), RUNTIME_INF);
 #endif /* CONFIG_USER_SCHED */
 #endif /* CONFIG_RT_GROUP_SCHED */
-
-init_brr_bandwidth(&def_brr_bandwidth,
-global_brr_period(), global_brr_runtime());
-
-#ifdef CONFIG_BRR_GROUP_SCHED
-init_brr_bandwidth(&init_task_group.brr_bandwidth,
-global_brr_period(), global_brr_runtime());
-#ifdef CONFIG_USER_SCHED
-init_brr_bandwidth(&root_task_group.brr_bandwidth,
-global_brr_period(), RUNTIME_INF);
-#endif /* CONFIG_USER_SCHED */
-#endif /* CONFIG_BRR_GROUP_SCHED */
-
 
 #ifdef CONFIG_GROUP_SCHED
 list_add(&init_task_group.list, &task_groups);
@@ -9240,7 +9222,7 @@ root_task_group.se[i]);
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 
 rq-»rt.rt_runtime = def_rt_bandwidth.rt_runtime;
-#ifdef CONFIG_RT_GROUP_SCHED
+#ifdef CONFIG_RT_GROUP_SCHED || defined CONFIG_BRR_GROUP_SCHED
 INIT_LIST_HEAD(&rq-»leaf_rt_rq_list);
 #ifdef CONFIG_CGROUP_SCHED
 init_tg_rt_entry(&init_task_group, &rq-»rt, NULL, i, 1, NULL);
@@ -9252,22 +9234,6 @@ init_tg_rt_entry(&init_task_group,
 root_task_group.rt_se[i]);
 #endif
 #endif
-
-
-#ifdef CONFIG_BRR_GROUP_SCHED
-brr-»brr.brr_runtime = def_brr_bandwidth.brr_runtime;
-INIT_LIST_HEAD(&brr-»leaf_brr_rq_list);
-#ifdef CONFIG_CGROUP_SCHED
-init_tg_brr_entry(&init_task_group, &brr-»brr, NULL, i, 1, NULL);
-#elif defined CONFIG_USER_SCHED
-init_tg_brr_entry(&root_task_group, &brr-»brr, NULL, i, 0, NULL);
-init_tg_brr_entry(&init_task_group,
-&per_cpu(init_brr_rq, i),
-&per_cpu(init_sched_brr_entity, i), i, 1,
-root_task_group.brr_se[i]);
-#endif
-#endif
-
 
 for (j = 0; j « CPU_LOAD_IDX_MAX; j++)
 rq-»cpu_load[j] = 0;
@@ -9651,7 +9617,7 @@ static void free_brr_sched_group(struct task_group *tg)
 {
 int i;
 
-destroy_brr_bandwidth(&tg-»brr_bandwidth);
+destroy_rt_bandwidth(&tg-»rt_bandwidth);
 
 for_each_possible_cpu(i) {
 if (tg-»brr_rq)
@@ -9668,7 +9634,7 @@ static
 int alloc_brr_sched_group(struct task_group *tg, struct task_group *parent)
 {
 struct brr_rq *brr_rq;
-struct sched_brr_entity *brr_se;
+struct sched_rt_entity *brr_se;
 struct rq *rq;
 int i;
 
@@ -9690,7 +9656,7 @@ brr_rq = kzalloc_node(sizeof(struct brr_rq),
 if (!brr_rq)
 goto err;
 
-brr_se = kzalloc_node(sizeof(struct sched_brr_entity),
+brr_se = kzalloc_node(sizeof(struct sched_rt_entity),
      GFP_KERNEL, cpu_to_node(i));
 if (!brr_se)
 goto err;
@@ -9751,7 +9717,6 @@ spin_lock_irqsave(&task_group_lock, flags);
 for_each_possible_cpu(i) {
 register_fair_sched_group(tg, i);
 register_rt_sched_group(tg, i);
-register_brr_sched_group(tg, i);
 }
 list_add_rcu(&tg-»list, &task_groups);
 
@@ -9786,7 +9751,6 @@ spin_lock_irqsave(&task_group_lock, flags);
 for_each_possible_cpu(i) {
 unregister_fair_sched_group(tg, i);
 unregister_rt_sched_group(tg, i);
-unregister_brr_sched_group(tg, i);
 }
 list_del_rcu(&tg-»list);
 list_del_rcu(&tg-»siblings);
@@ -10318,13 +10282,13 @@ static struct cftype cpu_files[] = {
 #ifdef CONFIG_BRR_GROUP_SCHED
 {
 .name = "brr_runtime_us",
-.read_s64 = cpu_brr_runtime_read,
-.write_s64 = cpu_brr_runtime_write,
+.read_s64 = cpu_rt_runtime_read,
+.write_s64 = cpu_rt_runtime_write,
 },
 {
 .name = "brr_period_us",
-.read_u64 = cpu_brr_period_read_uint,
-.write_u64 = cpu_brr_period_write_uint,
+.read_u64 = cpu_rt_period_read_uint,
+.write_u64 = cpu_rt_period_write_uint,
 },
 #endif
 };
