@@ -1829,7 +1829,7 @@ cfs_rq-»shares = shares;
 # include "sched_debug.c"
 #endif
 
-#define sched_class_highest (&rt_sched_class)
+#define sched_class_highest (&brr_sched_class)
 #define for_each_class(class) \
    for (class = sched_class_highest; class; class = class-»next)
 
