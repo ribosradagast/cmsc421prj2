@@ -38,7 +38,7 @@
 #define SCHED_BATCH 3
 /* SCHED_ISO: reserved but not implemented yet */
 #define SCHED_IDLE 5
-#define SCHED_BRR 42
+#define SCHED_BRR 6
 
 #ifdef __KERNEL__
 
