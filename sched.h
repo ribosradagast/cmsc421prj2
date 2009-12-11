@@ -1,4 +1,4 @@
-                                                                                                                                                                                                                                                                ﻿#ifndef _LINUX_SCHED_H
+
 #define _LINUX_SCHED_H
 
 /*
@@ -46,51 +46,51 @@ struct sched_param {
 int sched_priority;
 };
 
-#include «asm/param.h» /* for HZ */
+#include <asm/param.h> /* for HZ */
 
-#include «linux/capability.h»
-#include «linux/threads.h»
-#include «linux/kernel.h»
-#include «linux/types.h»
-#include «linux/timex.h»
-#include «linux/jiffies.h»
-#include «linux/rbtree.h»
-#include «linux/thread_info.h»
-#include «linux/cpumask.h»
-#include «linux/errno.h»
-#include «linux/nodemask.h»
-#include «linux/mm_types.h»
+#include <linux/capability.h>
+#include <linux/threads.h>
+#include <linux/kernel.h>
+#include <linux/types.h>
+#include <linux/timex.h>
+#include <linux/jiffies.h>
+#include <linux/rbtree.h>
+#include <linux/thread_info.h>
+#include <linux/cpumask.h>
+#include <linux/errno.h>
+#include <linux/nodemask.h>
+#include <linux/mm_types.h>
 
-#include «asm/system.h»
-#include «asm/page.h»
-#include «asm/ptrace.h»
-#include «asm/cputime.h»
+#include <asm/system.h>
+#include <asm/page.h>
+#include <asm/ptrace.h>
+#include <asm/cputime.h>
 
-#include «linux/smp.h»
-#include «linux/sem.h»
-#include «linux/signal.h»
-#include «linux/path.h»
-#include «linux/compiler.h»
-#include «linux/completion.h»
-#include «linux/pid.h»
-#include «linux/percpu.h»
-#include «linux/topology.h»
-#include «linux/proportions.h»
-#include «linux/seccomp.h»
-#include «linux/rcupdate.h»
-#include «linux/rtmutex.h»
+#include <linux/smp.h>
+#include <linux/sem.h>
+#include <linux/signal.h>
+#include <linux/path.h>
+#include <linux/compiler.h>
+#include <linux/completion.h>
+#include <linux/pid.h>
+#include <linux/percpu.h>
+#include <linux/topology.h>
+#include <linux/proportions.h>
+#include <linux/seccomp.h>
+#include <linux/rcupdate.h>
+#include <linux/rtmutex.h>
 
-#include «linux/time.h»
-#include «linux/param.h»
-#include «linux/resource.h»
-#include «linux/timer.h»
-#include «linux/hrtimer.h»
-#include «linux/task_io_accounting.h»
-#include «linux/kobject.h»
-#include «linux/latencytop.h»
-#include «linux/cred.h»
+#include <linux/time.h>
+#include <linux/param.h>
+#include <linux/resource.h>
+#include <linux/timer.h>
+#include <linux/hrtimer.h>
+#include <linux/task_io_accounting.h>
+#include <linux/kobject.h>
+#include <linux/latencytop.h>
+#include <linux/cred.h>
 
-#include «asm/processor.h»
+#include <asm/processor.h>
 
 struct mem_cgroup;
 struct exec_domain;
@@ -119,7 +119,7 @@ struct fs_struct;
 extern unsigned long avenrun[]; /* Load averages */
 
 #define FSHIFT 11 /* nr of bits of precision */
-#define FIXED_1 (1««FSHIFT) /* 1.0 as fixed-point */
+#define FIXED_1 (1<<FSHIFT) /* 1.0 as fixed-point */
 #define LOAD_FREQ (5*HZ+1) /* 5 sec intervals */
 #define EXP_1 1884 /* 1/exp(5sec/1min) as fixed-point */
 #define EXP_5 2014 /* 1/exp(5sec/5min) */
@@ -128,7 +128,7 @@ extern unsigned long avenrun[]; /* Load averages */
 #define CALC_LOAD(load,exp,n) \
 load *= exp; \
 load += n*(FIXED_1-exp); \
-load »»= FSHIFT;
+load >>= FSHIFT;
 
 extern unsigned long total_forks;
 extern int nr_threads;
@@ -169,8 +169,8 @@ extern unsigned long long time_sync_thresh;
 * Task state bitmask. NOTE! These bits are also
 * encoded in fs/proc/array.c: get_task_state().
 *
-* We have two separate sets of flags: task-»state
-* is about runnability, while task-»exit_state are
+* We have two separate sets of flags: task->state
+* is about runnability, while task->exit_state are
 * about the task exiting. Confusing, but this way
 * modifying one set can't modify the other one by
 * mistake.
@@ -180,10 +180,10 @@ extern unsigned long long time_sync_thresh;
 #define TASK_UNINTERRUPTIBLE 2
 #define __TASK_STOPPED 4
 #define __TASK_TRACED 8
-/* in tsk-»exit_state */
+/* in tsk->exit_state */
 #define EXIT_ZOMBIE 16
 #define EXIT_DEAD 32
-/* in tsk-»state again */
+/* in tsk->state again */
 #define TASK_DEAD 64
 #define TASK_WAKEKILL 128
 
@@ -201,21 +201,21 @@ extern unsigned long long time_sync_thresh;
 TASK_UNINTERRUPTIBLE | __TASK_STOPPED | \
 __TASK_TRACED)
 
-#define task_is_traced(task) ((task-»state & __TASK_TRACED) != 0)
-#define task_is_stopped(task) ((task-»state & __TASK_STOPPED) != 0)
+#define task_is_traced(task) ((task->state & __TASK_TRACED) != 0)
+#define task_is_stopped(task) ((task->state & __TASK_STOPPED) != 0)
 #define task_is_stopped_or_traced(task) \
-((task-»state & (__TASK_STOPPED | __TASK_TRACED)) != 0)
+((task->state & (__TASK_STOPPED | __TASK_TRACED)) != 0)
 #define task_contributes_to_load(task) \
-((task-»state & TASK_UNINTERRUPTIBLE) != 0 && \
-(task-»flags & PF_FREEZING) == 0)
+((task->state & TASK_UNINTERRUPTIBLE) != 0 && \
+(task->flags & PF_FREEZING) == 0)
 
 #define __set_task_state(tsk, state_value) \
-do { (tsk)-»state = (state_value); } while (0)
+do { (tsk)->state = (state_value); } while (0)
 #define set_task_state(tsk, state_value) \
-set_mb((tsk)-»state, (state_value))
+set_mb((tsk)->state, (state_value))
 
 /*
-* set_current_state() includes a barrier so that the write of current-»state
+* set_current_state() includes a barrier so that the write of current->state
 * is correctly serialised wrt the caller's subsequent test of whether to
 * actually sleep:
 *
@@ -226,14 +226,14 @@ set_mb((tsk)-»state, (state_value))
 * If the caller does not need such serialisation then use __set_current_state()
 */
 #define __set_current_state(state_value) \
-do { current-»state = (state_value); } while (0)
+do { current->state = (state_value); } while (0)
 #define set_current_state(state_value) \
-set_mb(current-»state, (state_value))
+set_mb(current->state, (state_value))
 
 /* Task command name length */
 #define TASK_COMM_LEN 16
 
-#include «linux/spinlock.h»
+#include <linux/spinlock.h>
 
 /*
 * This serializes "schedule()" and also protects
@@ -351,7 +351,7 @@ struct user_namespace;
 
 extern int sysctl_max_map_count;
 
-#include «linux/aio.h»
+#include <linux/aio.h>
 
 extern unsigned long
 arch_get_unmapped_area(struct file *, unsigned long, unsigned long,
@@ -368,22 +368,22 @@ extern void arch_unmap_area_topdown(struct mm_struct *, unsigned long);
 * The mm counters are not protected by its page_table_lock,
 * so must be incremented atomically.
 */
-#define set_mm_counter(mm, member, value) atomic_long_set(&(mm)-»_##member, value)
-#define get_mm_counter(mm, member) ((unsigned long)atomic_long_read(&(mm)-»_##member))
-#define add_mm_counter(mm, member, value) atomic_long_add(value, &(mm)-»_##member)
-#define inc_mm_counter(mm, member) atomic_long_inc(&(mm)-»_##member)
-#define dec_mm_counter(mm, member) atomic_long_dec(&(mm)-»_##member)
+#define set_mm_counter(mm, member, value) atomic_long_set(&(mm)->_##member, value)
+#define get_mm_counter(mm, member) ((unsigned long)atomic_long_read(&(mm)->_##member))
+#define add_mm_counter(mm, member, value) atomic_long_add(value, &(mm)->_##member)
+#define inc_mm_counter(mm, member) atomic_long_inc(&(mm)->_##member)
+#define dec_mm_counter(mm, member) atomic_long_dec(&(mm)->_##member)
 
 #else  /* !USE_SPLIT_PTLOCKS */
 /*
 * The mm counters are protected by its page_table_lock,
 * so can be incremented directly.
 */
-#define set_mm_counter(mm, member, value) (mm)-»_##member = (value)
-#define get_mm_counter(mm, member) ((mm)-»_##member)
-#define add_mm_counter(mm, member, value) (mm)-»_##member += (value)
-#define inc_mm_counter(mm, member) (mm)-»_##member++
-#define dec_mm_counter(mm, member) (mm)-»_##member--
+#define set_mm_counter(mm, member, value) (mm)->_##member = (value)
+#define get_mm_counter(mm, member) ((mm)->_##member)
+#define add_mm_counter(mm, member, value) (mm)->_##member += (value)
+#define inc_mm_counter(mm, member) (mm)->_##member++
+#define dec_mm_counter(mm, member) (mm)->_##member--
 
 #endif /* !USE_SPLIT_PTLOCKS */
 
@@ -391,22 +391,22 @@ extern void arch_unmap_area_topdown(struct mm_struct *, unsigned long);
 (get_mm_counter(mm, file_rss) + get_mm_counter(mm, anon_rss))
 #define update_hiwater_rss(mm) do { \
 unsigned long _rss = get_mm_rss(mm); \
-if ((mm)-»hiwater_rss « _rss) \
-(mm)-»hiwater_rss = _rss; \
+if ((mm)->hiwater_rss < _rss) \
+(mm)->hiwater_rss = _rss; \
 } while (0)
 #define update_hiwater_vm(mm) do { \
-if ((mm)-»hiwater_vm « (mm)-»total_vm) \
-(mm)-»hiwater_vm = (mm)-»total_vm; \
+if ((mm)->hiwater_vm < (mm)->total_vm) \
+(mm)->hiwater_vm = (mm)->total_vm; \
 } while (0)
 
 static inline unsigned long get_mm_hiwater_rss(struct mm_struct *mm)
 {
-return max(mm-»hiwater_rss, get_mm_rss(mm));
+return max(mm->hiwater_rss, get_mm_rss(mm));
 }
 
 static inline unsigned long get_mm_hiwater_vm(struct mm_struct *mm)
 {
-return max(mm-»hiwater_vm, mm-»total_vm);
+return max(mm->hiwater_vm, mm->total_vm);
 }
 
 extern void set_dumpable(struct mm_struct *mm, int value);
@@ -429,13 +429,13 @@ extern int get_dumpable(struct mm_struct *mm);
 #define MMF_DUMP_FILTER_SHIFT MMF_DUMPABLE_BITS
 #define MMF_DUMP_FILTER_BITS 7
 #define MMF_DUMP_FILTER_MASK \
-(((1 «« MMF_DUMP_FILTER_BITS) - 1) «« MMF_DUMP_FILTER_SHIFT)
+(((1 << MMF_DUMP_FILTER_BITS) - 1) << MMF_DUMP_FILTER_SHIFT)
 #define MMF_DUMP_FILTER_DEFAULT \
-((1 «« MMF_DUMP_ANON_PRIVATE) | (1 «« MMF_DUMP_ANON_SHARED) |\
-(1 «« MMF_DUMP_HUGETLB_PRIVATE) | MMF_DUMP_MASK_DEFAULT_ELF)
+((1 << MMF_DUMP_ANON_PRIVATE) | (1 << MMF_DUMP_ANON_SHARED) |\
+(1 << MMF_DUMP_HUGETLB_PRIVATE) | MMF_DUMP_MASK_DEFAULT_ELF)
 
 #ifdef CONFIG_CORE_DUMP_DEFAULT_ELF_HEADERS
-# define MMF_DUMP_MASK_DEFAULT_ELF (1 «« MMF_DUMP_ELF_HEADERS)
+# define MMF_DUMP_MASK_DEFAULT_ELF (1 << MMF_DUMP_ELF_HEADERS)
 #else
 # define MMF_DUMP_MASK_DEFAULT_ELF 0
 #endif
@@ -521,7 +521,7 @@ struct sigpending shared_pending;
 /* thread group exit support */
 int group_exit_code;
 /* overloaded:
-* - notify group_exit_task when -»count is equal to notify_count
+* - notify group_exit_task when ->count is equal to notify_count
 * - everyone except group_exit_task is stopped during signal delivery
 *   of fatal signals, group_exit_task processes the signal.
 */
@@ -589,7 +589,7 @@ unsigned long long sum_sched_runtime;
 * because there is no reader checking a limit that actually needs
 * to get both rlim_cur and rlim_max atomically, and either one
 * alone is a single word that can safely be read normally.
-* getrlimit/setrlimit use task_lock(current-»group_leader) to
+* getrlimit/setrlimit use task_lock(current->group_leader) to
 * protect this instead of the siglock, because they really
 * have no need to disable irqs.
 */
@@ -628,11 +628,11 @@ struct tty_audit_buf *tty_audit_buf;
 
 #define SIGNAL_UNKILLABLE 0x00000040 /* for init: ignore fatal signals */
 
-/* If true, all threads except -»group_exit_task have pending SIGKILL */
+/* If true, all threads except ->group_exit_task have pending SIGKILL */
 static inline int signal_group_exit(const struct signal_struct *sig)
 {
-return (sig-»flags & SIGNAL_GROUP_EXIT) ||
-(sig-»group_exit_task != NULL);
+return (sig->flags & SIGNAL_GROUP_EXIT) ||
+(sig->group_exit_task != NULL);
 }
 
 /*
@@ -763,7 +763,7 @@ CPU_MAX_IDLE_TYPES
 * Increase resolution of nice-level calculations:
 */
 #define SCHED_LOAD_SHIFT 10
-#define SCHED_LOAD_SCALE (1L «« SCHED_LOAD_SHIFT)
+#define SCHED_LOAD_SCALE (1L << SCHED_LOAD_SHIFT)
 
 #define SCHED_LOAD_SCALE_FUZZ SCHED_LOAD_SCALE
 
@@ -844,7 +844,7 @@ unsigned long cpumask[];
 
 static inline struct cpumask *sched_group_cpus(struct sched_group *sg)
 {
-return to_cpumask(sg-»cpumask);
+return to_cpumask(sg->cpumask);
 }
 
 enum sched_domain_level {
@@ -931,7 +931,7 @@ unsigned long span[];
 
 static inline struct cpumask *sched_domain_span(struct sched_domain *sd)
 {
-return to_cpumask(sd-»span);
+return to_cpumask(sd->span);
 }
 
 extern void partition_sched_domains(int ndoms_new, struct cpumask *doms_new,
@@ -940,7 +940,7 @@ extern void partition_sched_domains(int ndoms_new, struct cpumask *doms_new,
 /* Test a flag in parent sched domain */
 static inline int test_sd_parent(struct sched_domain *sd, int flag)
 {
-if (sd-»parent && (sd-»parent-»flags & flag))
+if (sd->parent && (sd->parent->flags & flag))
 return 1;
 
 return 0;
@@ -1034,10 +1034,10 @@ unsigned long weight, inv_weight;
 *
 * Current field usage histogram:
 *
-*     4 se-»block_start
-*     4 se-»run_node
-*     4 se-»sleep_start
-*     6 se-»load.weight
+*     4 se->block_start
+*     4 se->run_node
+*     4 se->sleep_start
+*     6 se->load.weight
 */
 struct sched_entity {
 struct load_weight load; /* for load-balancing */
@@ -1123,7 +1123,7 @@ struct brr_rq *my_q;
 };
 
 struct task_struct {
-volatile long state; /* -1 unrunnable, 0 runnable, »0 stopped */
+volatile long state; /* -1 unrunnable, 0 runnable, >0 stopped */
 void *stack;
 atomic_t usage;
 unsigned int flags; /* per process flags, defined below */
@@ -1203,8 +1203,8 @@ unsigned long stack_canary;
 
 /*
 * pointers to (original) parent process, youngest child, younger sibling,
-* older sibling, respectively.  (p-»father can be replaced with
-* p-»real_parent-»pid)
+* older sibling, respectively.  (p->father can be replaced with
+* p->real_parent->pid)
 */
 struct task_struct *real_parent; /* real parent process */
 struct task_struct *parent; /* recipient of SIGCHLD, wait4() reports */
@@ -1218,7 +1218,7 @@ struct task_struct *group_leader; /* threadgroup leader */
 /*
 * ptraced is the list of tasks this task is using ptrace on.
 * This includes both natural children and PTRACE_ATTACH targets.
-* p-»ptrace_entry is p's link on the p-»parent-»ptraced list.
+* p->ptrace_entry is p's link on the p->parent->ptraced list.
 */
 struct list_head ptraced;
 struct list_head ptrace_entry;
@@ -1383,7 +1383,7 @@ int cpuset_mem_spread_rotor;
 #ifdef CONFIG_CGROUPS
 /* Control Group info protected by css_set_lock */
 struct css_set *cgroups;
-/* cg_list protected by css_set_lock and tsk-»alloc_lock */
+/* cg_list protected by css_set_lock and tsk->alloc_lock */
 struct list_head cg_list;
 #endif
 #ifdef CONFIG_FUTEX
@@ -1446,13 +1446,13 @@ unsigned long trace;
 };
 
 /* Future-safe accessor for struct task_struct's cpus_allowed. */
-#define tsk_cpumask(tsk) (&(tsk)-»cpus_allowed)
+#define tsk_cpumask(tsk) (&(tsk)->cpus_allowed)
 
 /*
 * Priority of a process goes from 0..MAX_PRIO-1, valid RT
 * priority is 0..MAX_RT_PRIO-1, and SCHED_NORMAL/SCHED_BATCH
 * tasks are in the range MAX_RT_PRIO..MAX_PRIO-1. Priority
-* values are inverted: lower p-»prio value means higher priority.
+* values are inverted: lower p->prio value means higher priority.
 *
 * The MAX_USER_RT_PRIO value allows the actual maximum
 * RT priority to be separate from the value exported to
@@ -1472,31 +1472,31 @@ unsigned long trace;
 
 static inline int rt_prio(int prio)
 {
-if (unlikely(prio « MAX_RT_PRIO))
+if (unlikely(prio < MAX_RT_PRIO))
 return 1;
 return 0;
 }
 
 static inline int brr_prio(int prio)
 {
-if (unlikely(prio « MAX_BRR_PRIO))
+if (unlikely(prio < MAX_BRR_PRIO))
 return 1;
 return 0;
 }
 
 static inline int rt_task(struct task_struct *p)
 {
-return rt_prio(p-»prio);
+return rt_prio(p->prio);
 }
 
 static inline struct pid *task_pid(struct task_struct *task)
 {
-return task-»pids[PIDTYPE_PID].pid;
+return task->pids[PIDTYPE_PID].pid;
 }
 
 static inline struct pid *task_tgid(struct task_struct *task)
 {
-return task-»group_leader-»pids[PIDTYPE_PID].pid;
+return task->group_leader->pids[PIDTYPE_PID].pid;
 }
 
 /*
@@ -1506,12 +1506,12 @@ return task-»group_leader-»pids[PIDTYPE_PID].pid;
 */
 static inline struct pid *task_pgrp(struct task_struct *task)
 {
-return task-»group_leader-»pids[PIDTYPE_PGID].pid;
+return task->group_leader->pids[PIDTYPE_PGID].pid;
 }
 
 static inline struct pid *task_session(struct task_struct *task)
 {
-return task-»group_leader-»pids[PIDTYPE_SID].pid;
+return task->group_leader->pids[PIDTYPE_SID].pid;
 }
 
 struct pid_namespace;
@@ -1534,7 +1534,7 @@ struct pid_namespace *ns);
 
 static inline pid_t task_pid_nr(struct task_struct *tsk)
 {
-return tsk-»pid;
+return tsk->pid;
 }
 
 static inline pid_t task_pid_nr_ns(struct task_struct *tsk,
@@ -1551,7 +1551,7 @@ return __task_pid_nr_ns(tsk, PIDTYPE_PID, NULL);
 
 static inline pid_t task_tgid_nr(struct task_struct *tsk)
 {
-return tsk-»tgid;
+return tsk->tgid;
 }
 
 pid_t task_tgid_nr_ns(struct task_struct *tsk, struct pid_namespace *ns);
@@ -1601,7 +1601,7 @@ return task_pgrp_nr_ns(tsk, &init_pid_ns);
 */
 static inline int pid_alive(struct task_struct *p)
 {
-return p-»pids[PIDTYPE_PID].pid != NULL;
+return p->pids[PIDTYPE_PID].pid != NULL;
 }
 
 /**
@@ -1612,7 +1612,7 @@ return p-»pids[PIDTYPE_PID].pid != NULL;
 */
 static inline int is_global_init(struct task_struct *tsk)
 {
-return tsk-»pid == 1;
+return tsk->pid == 1;
 }
 
 /*
@@ -1624,13 +1624,13 @@ extern int is_container_init(struct task_struct *tsk);
 extern struct pid *cad_pid;
 
 extern void free_task(struct task_struct *tsk);
-#define get_task_struct(tsk) do { atomic_inc(&(tsk)-»usage); } while(0)
+#define get_task_struct(tsk) do { atomic_inc(&(tsk)->usage); } while(0)
 
 extern void __put_task_struct(struct task_struct *t);
 
 static inline void put_task_struct(struct task_struct *t)
 {
-if (atomic_dec_and_test(&t-»usage))
+if (atomic_dec_and_test(&t->usage))
 __put_task_struct(t);
 }
 
@@ -1673,28 +1673,28 @@ extern cputime_t task_gtime(struct task_struct *p);
 #define PF_FREEZER_NOSIG 0x80000000 /* Freezer won't send signals to it */
 
 /*
-* Only the _current_ task can read/write to tsk-»flags, but other
-* tasks can access tsk-»flags in readonly mode for example
+* Only the _current_ task can read/write to tsk->flags, but other
+* tasks can access tsk->flags in readonly mode for example
 * with tsk_used_math (like during threaded core dumping).
 * There is however an exception to this rule during ptrace
 * or during fork: the ptracer task is allowed to write to the
-* child-»flags of its traced child (same goes for fork, the parent
-* can write to the child-»flags), because we're guaranteed the
-* child is not running and in turn not changing child-»flags
+* child->flags of its traced child (same goes for fork, the parent
+* can write to the child->flags), because we're guaranteed the
+* child is not running and in turn not changing child->flags
 * at the same time the parent does it.
 */
-#define clear_stopped_child_used_math(child) do { (child)-»flags &= ~PF_USED_MATH; } while (0)
-#define set_stopped_child_used_math(child) do { (child)-»flags |= PF_USED_MATH; } while (0)
+#define clear_stopped_child_used_math(child) do { (child)->flags &= ~PF_USED_MATH; } while (0)
+#define set_stopped_child_used_math(child) do { (child)->flags |= PF_USED_MATH; } while (0)
 #define clear_used_math() clear_stopped_child_used_math(current)
 #define set_used_math() set_stopped_child_used_math(current)
 #define conditional_stopped_child_used_math(condition, child) \
-do { (child)-»flags &= ~PF_USED_MATH, (child)-»flags |= (condition) ? PF_USED_MATH : 0; } while (0)
+do { (child)->flags &= ~PF_USED_MATH, (child)->flags |= (condition) ? PF_USED_MATH : 0; } while (0)
 #define conditional_used_math(condition) \
 conditional_stopped_child_used_math(condition, current)
 #define copy_to_stopped_child_used_math(child) \
-do { (child)-»flags &= ~PF_USED_MATH, (child)-»flags |= current-»flags & PF_USED_MATH; } while (0)
+do { (child)->flags &= ~PF_USED_MATH, (child)->flags |= current->flags & PF_USED_MATH; } while (0)
 /* NOTE: this will return 0 or PF_USED_MATH, it will never return 1 */
-#define tsk_used_math(p) ((p)-»flags & PF_USED_MATH)
+#define tsk_used_math(p) ((p)->flags & PF_USED_MATH)
 #define used_math() tsk_used_math(current)
 
 #ifdef CONFIG_SMP
@@ -1812,7 +1812,7 @@ extern void rt_mutex_adjust_pi(struct task_struct *p);
 #else
 static inline int rt_mutex_getprio(struct task_struct *p)
 {
-return p-»normal_prio;
+return p->normal_prio;
 }
 # define rt_mutex_adjust_pi(p) do { } while (0)
 #endif
@@ -1886,13 +1886,13 @@ extern void __set_special_pids(struct pid *pid);
 extern struct user_struct * alloc_uid(struct user_namespace *, uid_t);
 static inline struct user_struct *get_uid(struct user_struct *u)
 {
-atomic_inc(&u-»__count);
+atomic_inc(&u->__count);
 return u;
 }
 extern void free_uid(struct user_struct *);
 extern void release_uids(struct user_namespace *ns);
 
-#include «asm/current.h»
+#include <asm/current.h>
 
 extern void do_timer(unsigned long ticks);
 
@@ -1919,9 +1919,9 @@ static inline int dequeue_signal_lock(struct task_struct *tsk, sigset_t *mask, s
 unsigned long flags;
 int ret;
 
-spin_lock_irqsave(&tsk-»sighand-»siglock, flags);
+spin_lock_irqsave(&tsk->sighand->siglock, flags);
 ret = dequeue_signal(tsk, mask, info);
-spin_unlock_irqrestore(&tsk-»sighand-»siglock, flags);
+spin_unlock_irqrestore(&tsk->sighand->siglock, flags);
 
 return ret;
 }
@@ -1962,19 +1962,19 @@ return kill_pid(cad_pid, sig, priv);
 
 static inline int is_si_special(const struct siginfo *info)
 {
-return info «= SEND_SIG_FORCED;
+return info <= SEND_SIG_FORCED;
 }
 
 /* True if we are on the alternate signal stack.  */
 
 static inline int on_sig_stack(unsigned long sp)
 {
-return (sp - current-»sas_ss_sp « current-»sas_ss_size);
+return (sp - current->sas_ss_sp < current->sas_ss_size);
 }
 
 static inline int sas_ss_flags(unsigned long sp)
 {
-return (current-»sas_ss_size == 0 ? SS_DISABLE
+return (current->sas_ss_size == 0 ? SS_DISABLE
 : on_sig_stack(sp) ? SS_ONSTACK : 0);
 }
 
@@ -1987,7 +1987,7 @@ extern struct mm_struct * mm_alloc(void);
 extern void __mmdrop(struct mm_struct *);
 static inline void mmdrop(struct mm_struct * mm)
 {
-if (unlikely(atomic_dec_and_test(&mm-»mm_count)))
+if (unlikely(atomic_dec_and_test(&mm->mm_count)))
 __mmdrop(mm);
 }
 
@@ -1997,7 +1997,7 @@ extern void mmput(struct mm_struct *);
 extern struct mm_struct *get_task_mm(struct task_struct *task);
 /* Remove the current tasks stale references to the old mm_struct */
 extern void mm_release(struct task_struct *, struct mm_struct *);
-/* Allocate a new mm structure and copy contents from tsk-»mm */
+/* Allocate a new mm structure and copy contents from tsk->mm */
 extern struct mm_struct *dup_mm(struct task_struct *tsk);
 
 extern int copy_thread(unsigned long, unsigned long, unsigned long,
@@ -2035,7 +2035,7 @@ return 1;
 }
 #endif
 
-#define next_task(p) list_entry(rcu_dereference((p)-»tasks.next), struct task_struct, tasks)
+#define next_task(p) list_entry(rcu_dereference((p)->tasks.next), struct task_struct, tasks)
 
 #define for_each_process(p) \
 for (p = &init_task ; (p = next_task(p)) != &init_task ; )
@@ -2053,7 +2053,7 @@ for (g = t = &init_task ; (g = t = next_task(g)) != &init_task ; ) do
 while ((t = next_thread(t)) != g)
 
 /* de_thread depends on thread_group_leader not being a pid based check */
-#define thread_group_leader(p) (p == p-»group_leader)
+#define thread_group_leader(p) (p == p->group_leader)
 
 /* Do to the insanities of de_thread it is possible for a process
 * to have the pid of the thread group leader without actually being
@@ -2063,24 +2063,24 @@ while ((t = next_thread(t)) != g)
 */
 static inline int has_group_leader_pid(struct task_struct *p)
 {
-return p-»pid == p-»tgid;
+return p->pid == p->tgid;
 }
 
 static inline
 int same_thread_group(struct task_struct *p1, struct task_struct *p2)
 {
-return p1-»tgid == p2-»tgid;
+return p1->tgid == p2->tgid;
 }
 
 static inline struct task_struct *next_thread(const struct task_struct *p)
 {
-return list_entry(rcu_dereference(p-»thread_group.next),
+return list_entry(rcu_dereference(p->thread_group.next),
   struct task_struct, thread_group);
 }
 
 static inline int thread_group_empty(struct task_struct *p)
 {
-return list_empty(&p-»thread_group);
+return list_empty(&p->thread_group);
 }
 
 #define delay_group_leader(p) \
@@ -2088,14 +2088,14 @@ return list_empty(&p-»thread_group);
 
 static inline int task_detached(struct task_struct *p)
 {
-return p-»exit_signal == -1;
+return p->exit_signal == -1;
 }
 
 /*
-* Protects -»fs, -»files, -»mm, -»group_info, -»comm, keyring
+* Protects ->fs, ->files, ->mm, ->group_info, ->comm, keyring
 * subscriptions and synchronises with wait4().  Also used in procfs.  Also
-* pins the final release of task.io_context.  Also protects -»cpuset and
-* -»cgroup.subsys[].
+* pins the final release of task.io_context.  Also protects ->cpuset and
+* ->cgroup.subsys[].
 *
 * Nests both inside and outside of read_lock(&tasklist_lock).
 * It must not be nested with write_lock_irq(&tasklist_lock),
@@ -2103,12 +2103,12 @@ return p-»exit_signal == -1;
 */
 static inline void task_lock(struct task_struct *p)
 {
-spin_lock(&p-»alloc_lock);
+spin_lock(&p->alloc_lock);
 }
 
 static inline void task_unlock(struct task_struct *p)
 {
-spin_unlock(&p-»alloc_lock);
+spin_unlock(&p->alloc_lock);
 }
 
 extern struct sighand_struct *lock_task_sighand(struct task_struct *tsk,
@@ -2117,18 +2117,18 @@ unsigned long *flags);
 static inline void unlock_task_sighand(struct task_struct *tsk,
 unsigned long *flags)
 {
-spin_unlock_irqrestore(&tsk-»sighand-»siglock, *flags);
+spin_unlock_irqrestore(&tsk->sighand->siglock, *flags);
 }
 
 #ifndef __HAVE_THREAD_FUNCTIONS
 
-#define task_thread_info(task) ((struct thread_info *)(task)-»stack)
-#define task_stack_page(task) ((task)-»stack)
+#define task_thread_info(task) ((struct thread_info *)(task)->stack)
+#define task_stack_page(task) ((task)->stack)
 
 static inline void setup_thread_stack(struct task_struct *p, struct task_struct *org)
 {
 *task_thread_info(p) = *task_thread_info(org);
-task_thread_info(p)-»task = p;
+task_thread_info(p)->task = p;
 }
 
 static inline unsigned long *end_of_stack(struct task_struct *p)
@@ -2142,7 +2142,7 @@ static inline int object_is_on_stack(void *obj)
 {
 void *stack = task_stack_page(current);
 
-return (obj »= stack) && (obj « (stack + THREAD_SIZE));
+return (obj >= stack) && (obj < (stack + THREAD_SIZE));
 }
 
 extern void thread_info_cache_init(void);
@@ -2278,9 +2278,9 @@ void thread_group_cputimer(struct task_struct *tsk, struct task_cputime *times);
 
 static inline void thread_group_cputime_init(struct signal_struct *sig)
 {
-sig-»cputimer.cputime = INIT_CPUTIME;
-spin_lock_init(&sig-»cputimer.lock);
-sig-»cputimer.running = 0;
+sig->cputimer.cputime = INIT_CPUTIME;
+spin_lock_init(&sig->cputimer.lock);
+sig->cputimer.running = 0;
 }
 
 static inline void thread_group_cputime_free(struct signal_struct *sig)
@@ -2291,7 +2291,7 @@ static inline void thread_group_cputime_free(struct signal_struct *sig)
 * Reevaluate whether the task has signals pending delivery.
 * Wake the task if so.
 * This is required every time the blocked sigset_t changes.
-* callers must hold sighand-»siglock.
+* callers must hold sighand->siglock.
 */
 extern void recalc_sigpending_and_wake(struct task_struct *t);
 extern void recalc_sigpending(void);
@@ -2299,13 +2299,13 @@ extern void recalc_sigpending(void);
 extern void signal_wake_up(struct task_struct *t, int resume_stopped);
 
 /*
-* Wrappers for p-»thread_info-»cpu access. No-op on UP.
+* Wrappers for p->thread_info->cpu access. No-op on UP.
 */
 #ifdef CONFIG_SMP
 
 static inline unsigned int task_cpu(const struct task_struct *p)
 {
-return task_thread_info(p)-»cpu;
+return task_thread_info(p)->cpu;
 }
 
 extern void set_task_cpu(struct task_struct *p, unsigned int cpu);
@@ -2357,7 +2357,7 @@ extern void sched_move_task(struct task_struct *tsk);
 extern int sched_group_set_shares(struct task_group *tg, unsigned long shares);
 extern unsigned long sched_group_shares(struct task_group *tg);
 #endif
-#ifdef CONFIG_RT_GROUP_SCHED || defined CONFIG_BRR_GROUP_SCHED
+#if defined(CONFIG_RT_GROUP_SCHED) || defined(CONFIG_BRR_GROUP_SCHED)
 extern int sched_group_set_rt_runtime(struct task_group *tg,
       long rt_runtime_us);
 extern long sched_group_rt_runtime(struct task_group *tg);
@@ -2374,22 +2374,22 @@ struct task_struct *tsk);
 #ifdef CONFIG_TASK_XACCT
 static inline void add_rchar(struct task_struct *tsk, ssize_t amt)
 {
-tsk-»ioac.rchar += amt;
+tsk->ioac.rchar += amt;
 }
 
 static inline void add_wchar(struct task_struct *tsk, ssize_t amt)
 {
-tsk-»ioac.wchar += amt;
+tsk->ioac.wchar += amt;
 }
 
 static inline void inc_syscr(struct task_struct *tsk)
 {
-tsk-»ioac.syscr++;
+tsk->ioac.syscr++;
 }
 
 static inline void inc_syscw(struct task_struct *tsk)
 {
-tsk-»ioac.syscw++;
+tsk->ioac.syscw++;
 }
 #else
 static inline void add_rchar(struct task_struct *tsk, ssize_t amt)

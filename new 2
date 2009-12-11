@@ -1,9 +1,9 @@
 static inline void sched_brr_rq_enqueue(struct brr_rq *brr_rq)
 {
 /*If it's not empty*/
-if (brr_rq-»brr_nr_running)
+if (brr_rq->brr_nr_running)
 /* Find a place in the current run-q for this new rq   */
-resched_task(rq_of_brr_rq(brr_rq)-»curr);
+resched_task(rq_of_brr_rq(brr_rq)->curr);
 }
 
 static void enqueue_task_brr(struct rq *rq, struct task_struct *p, int wakeup)
