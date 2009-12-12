@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
 	sched_setscheduler(getpid(), atoi( argv[2]), &params);
 	for(i=0; i<100; i++){
 		strcat(argv[1], "Program 1 just ran for the ");
-		strcat(argv[1], atoi(i));
+		argv[1]+=i;
 		strcat(argv[1], "th time.\n");
 		
 		sleep(1);
