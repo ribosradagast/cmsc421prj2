@@ -811,7 +811,7 @@ if so, loop through available buckets and determine
 
 	if(bucketToAddTo==-1){
 		for (i = 0; i < MAX_BRR_PRIO; i++) {
-			if(&brr_rq->numInBucket[i]==0){
+			if(&rt_rq->numInBucket[i]==0){
 				bucketToAddTo=i;
 				break;
 			}
@@ -859,9 +859,9 @@ int bucketToAddTo=rt_task_of(rt_se)->bid;
 	numInBucket[bucketToAddTo]--;
 	
 	for (i = 0; i < MAX_BRR_PRIO; i++) {
-			count+=&brr_rq->numInBucket[bucketToAddTo];
+			count+=&rt_rq->numInBucket[bucketToAddTo];
 		}
-	kprintf("Number in queue is: %d\n", &brr_rq->brr_nr_running);
+	kprintf("Number in queue is: %d\n", &rt_rq->brr_nr_running);
 	kprintf("Number counted from array is: %d\n", count);
 	
 #endif
@@ -1087,10 +1087,11 @@ return next;
 /*
 DONE: get the bucket number that we want to assign the next task to
 */
-static struct int getNextBucketNumber(struct brr_rq *brr_rq, int currentBucket){
+static struct int getNextBucketNumber(struct rt_rq *rt_rq, int currentBucket)
+{
 	int offset=0;
 	for(offset=currentBucket+1; offset<=MAX_BRR_PRIO+1;offset++){
-		if(&brr_rq->numInBucket[offset % MAX_BRR_PRIO]!=0){
+		if(&rt_rq->numInBucket[offset % MAX_BRR_PRIO]!=0){
 			return offset;
 		}
 	}
@@ -1102,7 +1103,11 @@ static struct task_struct *_pick_next_task_rt(struct rq *rq)
 struct sched_rt_entity *rt_se;
 struct task_struct *p;
 struct rt_rq *rt_rq;
-
+	
+int num = -42;
+	
+	
+	
 rt_rq = &rq->rt;
 
 if (unlikely(!rt_rq->rt_nr_running))
@@ -1111,16 +1116,16 @@ return NULL;
 if (rt_rq_throttled(rt_rq))
 return NULL;
 
-	//get the currently-running bucket number
-	int num = getNextBucketNumber(brr_rq,   rq->curr->bid);
+//get the currently-running bucket number
+num = getNextBucketNumber(rt_rq,   rq->curr->bid);
 
 #ifdef CONFIG_BRR_GROUP_SCHED
 do{
 	do {
-		rt_se = pick_next_rt_entity(rq, brr_rq);
+		rt_se = pick_next_rt_entity(rq, rt_rq);
 		BUG_ON(!rt_se);
-		brr_rq = group_brr_rq(rt_se);
-	} while (brr_rq);
+		rt_rq = group_rt_rq(rt_se);
+	} while (rt_rq);
 
 	p = rt_task_of(rt_se);
 		
@@ -1139,10 +1144,10 @@ then we return the index of this last bucket
 */
 #else
 do {
-		rt_se = pick_next_rt_entity(rq, brr_rq);
+		rt_se = pick_next_rt_entity(rq, rt_rq);
 		BUG_ON(!rt_se);
-		brr_rq = group_brr_rq(rt_se);
-	} while (brr_rq);
+		rt_rq = group_rt_rq(rt_se);
+	} while (rt_rq);
 #endif
 
 
@@ -1835,7 +1840,7 @@ dequeue_pushable_task(rq, p);
 }
 
 static const struct sched_class rt_sched_class = {
-.next = &brr_sched_class,
+.next = &fair_sched_class,
 .enqueue_task = enqueue_task_rt,
 .dequeue_task = dequeue_task_rt,
 .yield_task = yield_task_rt,
