@@ -2539,7 +2539,7 @@ p->se.slice_max = 0;
 p->se.wait_max = 0;
 #endif
 
-if task_has_rt_policy(&p){
+if(task_has_rt_policy(p)){
 INIT_LIST_HEAD(&p->rt.run_list);
 }else{
 INIT_LIST_HEAD(&p->rt.run_list);
@@ -5765,11 +5765,11 @@ return 0;
 */
 int task_prio(const struct task_struct *p)
 {
-if(task_has_brr_policy(&p){
-return p->prio - MAX_BRR_PRIO;
-}else{
-return p->prio - MAX_RT_PRIO;
-}
+	if(task_has_brr_policy(p)){
+		return p->prio - MAX_BRR_PRIO;
+	}else{
+		return p->prio - MAX_RT_PRIO;
+	}
 }
 
 /**
@@ -5827,7 +5827,7 @@ case SCHED_RR:
 p->sched_class = &rt_sched_class;
 break;
 case SCHED_BRR:
-p->sched_class = &brr_sched_class;
+p->sched_class = &rt_sched_class;
 	/*  
 	We know that there are no errors
 If it's a BRR, 
@@ -5840,7 +5840,7 @@ p->normal_prio = normal_prio(0);
 break;
 }
 
-if(!task_has_brr_policy(&p))
+if(!task_has_brr_policy(p))
 {
 	p->rt_priority = prio;
 	p->normal_prio = normal_prio(p);
@@ -5890,8 +5890,8 @@ recheck:
 * SCHED_BATCH and SCHED_IDLE is 0.
 */
 
-if(task_has_brr_policy(&p)&& param->sched_priority!=-1){
-	if (param->sched_priority < 0 || ||
+if(task_has_brr_policy(p)&& param->sched_priority!=-1){
+	if (param->sched_priority < 0 || 
 			(!p->mm && param->sched_priority > MAX_BRR_PRIO-1))
 		return -EINVAL; 
 	}
@@ -8983,7 +8983,7 @@ ptr += nr_cpu_ids * sizeof(void **);
 init_task_group.rt_rq = (struct rt_rq **)ptr;
 ptr += nr_cpu_ids * sizeof(void **);
 
-#ifdef (CONFIG_USER_SCHED) || defined (CONFIG_RT_GROUP_SCHED)
+#ifdef CONFIG_USER_SCHED
 root_task_group.rt_se = (struct sched_rt_entity **)ptr;
 ptr += nr_cpu_ids * sizeof(void **);
 
