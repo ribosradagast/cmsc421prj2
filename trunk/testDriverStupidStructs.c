@@ -3,13 +3,13 @@
 
 
 
-struct rt_rq{
+struct bucketArray{
 	/*
 array for bucket-numofcontents
 numInBucket[i] is the number of processes that have bucket id
 'i' (in bucket 'i')
 */
-int *numInBucket ;
+int numInBucket [5000];
 } ;
 
 
@@ -32,8 +32,7 @@ TODO: see if this works
 
 int main()
 {
-	struct rt_rq *ourRQ={0};
-	ourRQ -> numInBucket = (int *)malloc(sizeof(int)*1000);
+	struct bucketArray *ourRQ=(struct bucketArray *)malloc(sizeof(struct bucketArray)*1000);
 
 /*	init_rt_rq(ourRQ);*/
 
