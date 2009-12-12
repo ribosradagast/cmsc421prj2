@@ -29,8 +29,8 @@ int main(int argc, char *argv[]) {
 		sched_setscheduler(getpid(),   5 , &params);
 		for(i=0; i<100; i++){
 			printf("Program 1 just started execution for the %dth time\n", i);
-			for(j=0; j<100; j++){
-				for(k=0; k<100; k++){
+			for(j=0; j<10000; j++){
+				for(k=0; k<10000; k++){
 					j*k;
 				}
 			}
