@@ -426,6 +426,73 @@ return 0;
 
 
 
+static const struct sched_class brr_sched_class = {
+	.next = &fair_sched_class,
+	.enqueue_task = enqueue_task_rt_brr,
+	.dequeue_task = dequeue_task_rt_brr,
+	.yield_task = yield_task_rt,
+
+	.check_preempt_curr = check_preempt_curr_rt,
+
+	.pick_next_task = pick_next_task_rt_brr,
+	.put_prev_task = put_prev_task_rt_brr,
+
+#ifdef CONFIG_SMP
+	.select_task_rq = select_task_rq_rt,
+
+	.load_balance = load_balance_rt,
+	.move_one_task = move_one_task_rt,
+	.set_cpus_allowed       = set_cpus_allowed_rt,
+	.rq_online              = rq_online_rt,
+	.rq_offline             = rq_offline_rt,
+	.pre_schedule = pre_schedule_rt,
+	.needs_post_schedule = needs_post_schedule_rt,
+	.post_schedule = post_schedule_rt,
+	.task_wake_up = task_wake_up_rt,
+	.switched_from = switched_from_rt,
+#endif
+
+	.set_curr_task          = set_curr_task_rt,
+	.task_tick = task_tick_rt_brr,
+
+	.prio_changed = prio_changed_rt,
+	.switched_to = switched_to_rt,
+};
+
+
+
+static const struct sched_class rt_sched_class = {
+.next = &brr_sched_class,
+.enqueue_task = enqueue_task_rt,
+.dequeue_task = dequeue_task_rt,
+.yield_task = yield_task_rt,
+
+.check_preempt_curr = check_preempt_curr_rt,
+
+.pick_next_task = pick_next_task_rt,
+.put_prev_task = put_prev_task_rt,
+
+#ifdef CONFIG_SMP
+.select_task_rq = select_task_rq_rt,
+
+.load_balance = load_balance_rt,
+.move_one_task = move_one_task_rt,
+.set_cpus_allowed       = set_cpus_allowed_rt,
+.rq_online              = rq_online_rt,
+.rq_offline             = rq_offline_rt,
+.pre_schedule = pre_schedule_rt,
+.needs_post_schedule = needs_post_schedule_rt,
+.post_schedule = post_schedule_rt,
+.task_wake_up = task_wake_up_rt,
+.switched_from = switched_from_rt,
+#endif
+
+.set_curr_task          = set_curr_task_rt,
+.task_tick = task_tick_rt,
+
+.prio_changed = prio_changed_rt,
+.switched_to = switched_to_rt,
+};
 
 
 #ifdef CONFIG_SCHED_DEBUG
