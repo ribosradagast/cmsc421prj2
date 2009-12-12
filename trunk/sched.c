@@ -9189,7 +9189,7 @@ EXPORT_SYMBOL(__might_sleep);
 #endif
 
 #ifdef CONFIG_MAGIC_SYSRQ
-static void normalize_task(struct rq *rq, struct index *p)
+static void normalize_task(struct rq *rq, struct task_struct *p)
 {
 int on_rq;
 
