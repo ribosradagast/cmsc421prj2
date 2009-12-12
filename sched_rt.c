@@ -2,6 +2,9 @@
 * Real-Time Scheduling Class (mapped to the SCHED_FIFO and SCHED_RR
 * policies)
 */
+//method header
+static struct int getNextBucketNumber(struct rt_rq *rt_rq, int currentBucket);
+
 
 static inline struct task_struct *rt_task_of(struct sched_rt_entity *rt_se)
 {
@@ -807,7 +810,8 @@ DONE
 Check for if (rt_task_of(rt_se)=>bid == -1)
 if so, loop through available buckets and determine 
 */
-	int bucketToAddTo=&p->bid;
+int i=0;
+int bucketToAddTo=rt_task_of(rt_se)->bid;
 
 	if(bucketToAddTo==-1){
 		for (i = 0; i < MAX_BRR_PRIO; i++) {
@@ -817,7 +821,7 @@ if so, loop through available buckets and determine
 			}
 		}
 	}
-	numInBucket[bucketToAddTo]++;
+	&rt_rq->numInBucket[bucketToAddTo]++;
 	&p->bid=bucketToAddTo;
 #endif
 	
@@ -853,15 +857,15 @@ DONE: First, remove 1 from the count of bucketarray
 compare total running in rq
 
 */
+int i=0;
 int count=0;
 int bucketToAddTo=rt_task_of(rt_se)->bid;
-		int bucketToAddTo=&p->bid;
-	numInBucket[bucketToAddTo]--;
+	&rt_rq->numInBucket[bucketToAddTo]--;
 	
 	for (i = 0; i < MAX_BRR_PRIO; i++) {
 			count+=&rt_rq->numInBucket[bucketToAddTo];
 		}
-	kprintf("Number in queue is: %d\n", &rt_rq->brr_nr_running);
+	kprintf("Number in queue is: %d\n", &rt_rq->rt_nr_running);
 	kprintf("Number counted from array is: %d\n", count);
 	
 #endif

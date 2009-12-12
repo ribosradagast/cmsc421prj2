@@ -8833,7 +8833,7 @@ int i;
 initialize  array for bucket num_contents
 */
 for (i = 0; i < MAX_BRR_PRIO; i++) {
-&brr_rq->numInBucket[i]=0;
+&rt_rq->numInBucket[i]=0;
 }
 #endif
 
