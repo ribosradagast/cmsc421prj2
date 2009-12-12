@@ -822,7 +822,7 @@ int bucketToAddTo = p->bid;
 			}
 		}
 	}
-	rt_rq->numInBucket[bucketToAddTo]=&rt_rq->numInBucket[bucketToAddTo]+1;
+	rt_rq->numInBucket[bucketToAddTo]++;
 	p->bid=bucketToAddTo;
 #endif
 	
@@ -861,13 +861,13 @@ compare total running in rq
 int i=0;
 int count=0;
 int bucketToAddTo=rt_task_of(rt_se)->bid;
-rt_rq->numInBucket[bucketToAddTo]=&rt_rq->numInBucket[bucketToAddTo]-1;
+rt_rq->numInBucket[bucketToAddTo]--;
 	
 	for (i = 0; i < MAX_BRR_PRIO; i++) {
 			count+=rt_rq->numInBucket[bucketToAddTo];
 		}
-	kprintf("Number in queue is: %d\n", rt_rq->rt_nr_running);
-	kprintf("Number counted from array is: %d\n", count);
+	printk("Number in queue is: %d\n", rt_rq->rt_nr_running);
+	printk("Number counted from array is: %d\n", count);
 	
 #endif
 
@@ -1134,7 +1134,7 @@ do{
 
 	p = rt_task_of(rt_se);
 		
-	printk("Bucket id for the one that we've chosen is:\n", p->bid);
+	printk("Bucket id for the one that we've chosen is: %d\n", p->bid);
 	}while(p->bid!=num);
 	
 	
