@@ -334,10 +334,10 @@ DONE: get the bucket number that we want to assign the next task to
 */
 static  int getNextBucketNumber(struct rt_rq *rt_rq, int currentBucket)
 {
-printk("WHOOOOOOO getNextBucketNumber was called!\n");
 	int offset=0;
+	printk("WHOOOOOOO getNextBucketNumber was called!\n");
 	for(offset=currentBucket+1; offset<=MAX_BRR_PRIO+1;offset++){
-		if(&rt_rq->numInBucket[offset % MAX_BRR_PRIO]!=0){
+		if(rt_rq->numInBucket[offset % MAX_BRR_PRIO]!=0){
 			return offset;
 		}
 	}
