@@ -26,7 +26,7 @@ initialize  array for bucket num_contents
 TODO: see if this works
 */
 	for (i = 0; i < 1000; i++) {
-		rt_rq->*numInBucket[i]=0;
+		rt_rq->&numInBucket[i]=0;
 		printf("array at %d initialised to 0\n", i);
 	}
 }
