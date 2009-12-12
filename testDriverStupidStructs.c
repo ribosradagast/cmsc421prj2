@@ -10,7 +10,7 @@ array for bucket-numofcontents
 numInBucket[i] is the number of processes that have bucket id
 'i' (in bucket 'i')
 */
-int numInBucket[5000] ;
+int numInBucket[1000] ;
 } ;
 
 
@@ -21,20 +21,20 @@ void init_rt_rq(struct rt_rq *rt_rq)
 {
 	int i;
 
-	rt_rq->numInBucket={0};
 	/*
 initialize  array for bucket num_contents
 TODO: see if this works
 */
 	for (i = 0; i < 1000; i++) {
-	//	rt_rq->numInBucket[i]=0;
+	/*	rt_rq->numInBucket[i]=0;*/
 		printf("array at %d initialised to 0\n", i);
 	}
 }
 
 int main()
 {
-	struct rt_rq *ourRQ = (struct rt_rq *)malloc(sizeof(struct rt_rq));
+	struct rt_rq *ourRQ;
+	ourRQ -> numInBucket = (int *)malloc(sizeof(int)*1000);
 
 	init_rt_rq(ourRQ);
 
