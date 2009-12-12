@@ -26,8 +26,8 @@ int main(int argc, char *argv[]) {
 		int k=0;
 		struct sched_param  params;
 		params.sched_priority=atoi( argv[2]);
-		sched_setscheduler(getpid(),   5 , &params);
-		for(i=0; i<100; i++){
+		sched_setscheduler(getpid(),   42 , &params);
+		for(i=0; i<10; i++){
 			printf("Program 1 just started execution for the %dth time\n", i);
 			for(j=0; j<100000; j++){
 				for(k=0; k<10000; k++){
