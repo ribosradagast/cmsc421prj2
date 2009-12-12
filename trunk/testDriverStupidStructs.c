@@ -34,7 +34,7 @@ int main()
 {
 	struct bucketArray *ourRQ=(struct bucketArray *)malloc(sizeof(struct bucketArray)*1000);
 
-/*	init_rt_rq(ourRQ);*/
+	init_rt_rq(ourRQ);
 
 	return 0;
 }
