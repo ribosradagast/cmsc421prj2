@@ -5765,11 +5765,7 @@ return 0;
 */
 int task_prio(const struct task_struct *p)
 {
-	if(task_has_brr_policy(p)){
-		return p->prio - MAX_BRR_PRIO;
-	}else{
-		return p->prio - MAX_RT_PRIO;
-	}
+	return p->prio - MAX_RT_PRIO;
 }
 
 /**
