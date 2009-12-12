@@ -1769,8 +1769,8 @@ cfs_rq->shares = shares;
 #include "sched_stats.h"
 #include "sched_idletask.c"
 #include "sched_fair.c"
-#include "sched_brr.c"
 #include "sched_rt.c"
+#include "sched_brr.c"
 #ifdef CONFIG_SCHED_DEBUG
 # include "sched_debug.c"
 #endif
