@@ -1770,7 +1770,7 @@ cfs_rq->shares = shares;
 #include "sched_idletask.c"
 #include "sched_fair.c"
 #include "sched_rt.c"
- // #include "sched_brr.c"
+#include "sched_brr.c"
 #ifdef CONFIG_SCHED_DEBUG
 # include "sched_debug.c"
 #endif
@@ -5823,7 +5823,7 @@ case SCHED_RR:
 p->sched_class = &rt_sched_class;
 break;
 case SCHED_BRR:
-p->sched_class = &rt_sched_class;
+p->sched_class = &brr_sched_class;
 	/*  
 	We know that there are no errors
 If it's a BRR, 
