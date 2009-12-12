@@ -1113,13 +1113,6 @@ struct rt_rq *rt_rq;
 /* rq "owned" by this entity/group: */
 struct rt_rq *my_q;
 #endif
-#ifdef CONFIG_BRR_GROUP_SCHED
-struct sched_rt_entity *parent;
-/* rq on which this entity is (to be) queued: */
-struct brr_rq *brr_rq;
-/* rq "owned" by this entity/group: */
-struct brr_rq *my_q;
-#endif
 };
 
 struct task_struct {
@@ -2357,7 +2350,7 @@ extern void sched_move_task(struct task_struct *tsk);
 extern int sched_group_set_shares(struct task_group *tg, unsigned long shares);
 extern unsigned long sched_group_shares(struct task_group *tg);
 #endif
-#if defined(CONFIG_RT_GROUP_SCHED) || defined(CONFIG_BRR_GROUP_SCHED)
+#if defined(CONFIG_RT_GROUP_SCHED)
 extern int sched_group_set_rt_runtime(struct task_group *tg,
       long rt_runtime_us);
 extern long sched_group_rt_runtime(struct task_group *tg);
