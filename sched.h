@@ -30,7 +30,7 @@
 #define CLONE_IO 0x80000000 /* Clone io context */
 
 
-#define CONFIG_BRR_GROUP_SCHED CONFIG_AX25_DAMA_SLAVE  
+/*    #define CONFIG_BRR_GROUP_SCHED CONFIG_AX25_DAMA_SLAVE     */
 
 
 /*
