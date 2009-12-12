@@ -21,7 +21,7 @@ void init_rt_rq(struct rt_rq *rt_rq)
 {
 	int i;
 
-	rt_rq->numinBucket={0};
+	rt_rq->numInBucket={0};
 	/*
 initialize  array for bucket num_contents
 TODO: see if this works
