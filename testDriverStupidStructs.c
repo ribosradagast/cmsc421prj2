@@ -1,4 +1,6 @@
-typedef struct {
+#include <stdlib.h>
+
+struct rt_rq{
 
 /*
 array for bucket-numofcontents
@@ -6,9 +8,11 @@ numInBucket[i] is the number of processes that have bucket id
 'i' (in bucket 'i')
 */
 int numInBucket[1000];
-}rt_rq ;
+} ;
 
 
+
+static void init_rt_rq(struct rt_rq *rt_rq);
 
 static void init_rt_rq(struct rt_rq *rt_rq)
 {
@@ -23,10 +27,10 @@ printf("array at %d initialised to 0\n", i);
 rt_rq->numInBucket[i]=0;
 }
 
+rt_rq *ourRQ;
 
 int main()
 {
-rt_rq *ourRQ;
 init_rt_rq(ourRQ);
 
 return 0;
