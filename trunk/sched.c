@@ -1880,7 +1880,7 @@ p->normal_prio = normal_prio(p);
 * keep the priority unchanged. Otherwise, update priority
 * to the normal priority:
 */
-if (!rt_prio(p->prio)&&!brr_prio(p->prio))
+if (!rt_prio(p->prio))
 return p->normal_prio;
 return p->prio;
 }
@@ -5663,7 +5663,7 @@ update_rq_clock(rq);
 * it wont have any effect on scheduling until the task is
 * SCHED_FIFO/SCHED_RR:
 */
-if (task_has_rt_policy(p)||task_has_brr_policy(p)) {
+if (task_has_rt_policy(p)) {
 p->static_prio = NICE_TO_PRIO(nice);
 goto out_unlock;
 }
@@ -5878,8 +5878,8 @@ recheck:
 * SCHED_BATCH and SCHED_IDLE is 0.
 */
 
-if(task_has_brr_policy(p)&& param->sched_priority!=-1){
-	if (param->sched_priority < 0 || 
+if(task_has_brr_policy(p)){
+	if ((param->sched_priority < -1) || 
 			(!p->mm && param->sched_priority > MAX_BRR_PRIO-1))
 		return -EINVAL; 
 	}
@@ -8823,9 +8823,10 @@ int i;
 #ifdef CONFIG_BRR_GROUP_SCHED
 /*
 initialize  array for bucket num_contents
+TODO: see if this works
 */
-for (i = 0; i < MAX_BRR_PRIO; i++) {
-rt_rq->numInBucket[i]=0;
+for (i = 0; i < MAX_BRR_PRIO-70; i++) {
+&rt_rq->numInBucket[i]=0;
 }
 #endif
 
