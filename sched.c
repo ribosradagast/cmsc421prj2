@@ -177,16 +177,8 @@ return brr_policy(p->policy);
 * This is the priority-queue data structure of the RT scheduling class:
 */
 struct rt_prio_array {
-#ifdef CONFIG_BRR_GROUP_SCHED
-/*
-* This is the priority-queue data structure of the BRR scheduling class:
-*/
-DECLARE_BITMAP(bitmap, MAX_BRR_PRIO+1); /* include 1 bit for delimiter */
-struct list_head queue[MAX_BRR_PRIO];
-#else
 DECLARE_BITMAP(bitmap, MAX_RT_PRIO+1); /* include 1 bit for delimiter */
 struct list_head queue[MAX_RT_PRIO];
-#endif
 };
 
 
@@ -1791,7 +1783,7 @@ rq->nr_running--;
 
 static void set_load_weight(struct task_struct *p)
 {
-	if (task_has_rt_policy(p)||task_has_brr_policy(p)) {
+	if (task_has_rt_policy(p)) {
 		p->se.load.weight = prio_to_weight[0] * 2;
 		p->se.load.inv_weight = prio_to_wmult[0] >> 1;
 		return;
@@ -6448,9 +6440,9 @@ int ret = -EINVAL;
 switch (policy) {
 case SCHED_FIFO:
 case SCHED_RR:
+case SCHED_BRR:
 ret = MAX_USER_RT_PRIO-1;
 break;
-case SCHED_BRR:
 case SCHED_NORMAL:
 case SCHED_BATCH:
 case SCHED_IDLE:
