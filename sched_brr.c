@@ -9,16 +9,6 @@ static void enqueue_rt_entity_brr(struct sched_rt_entity *rt_se);
 static void dequeue_rt_entity_brr(struct sched_rt_entity *rt_se);
 
 
-static struct task_struct *pick_next_task_rt_brr(struct rq *rq)
-{
-struct task_struct *p = _pick_next_task_rt_brr(rq);
-
-/* The running task is never eligible for pushing */
-if (p)
-dequeue_pushable_task(rq, p);
-
-return p;
-}
 
 static struct task_struct *_pick_next_task_rt_brr(struct rq *rq)
 {
@@ -27,7 +17,6 @@ struct task_struct *p;
 struct rt_rq *rt_rq;
 	
 int num = -42;
-	
 	
 	
 rt_rq = &rq->rt;
@@ -73,6 +62,19 @@ p->se.exec_start = rq->clock;
 
 return p;
 }
+
+static struct task_struct *pick_next_task_rt_brr(struct rq *rq)
+{
+struct task_struct *p = _pick_next_task_rt_brr(rq);
+
+/* The running task is never eligible for pushing */
+if (p)
+dequeue_pushable_task(rq, p);
+
+return p;
+}
+
+
 
 
 static void sched_rt_rq_enqueue_brr(struct rt_rq *rt_rq)
@@ -243,24 +245,6 @@ static void enqueue_task_rt_brr(struct rq *rq, struct task_struct *p, int wakeup
 	inc_cpu_load(rq, p->se.load.weight);
 }
 
-static void enqueue_rt_entity_brr(struct sched_rt_entity *rt_se)
-{
-	dequeue_rt_stack_brr(rt_se);
-	for_each_sched_rt_entity(rt_se)
-	__enqueue_rt_entity_brr(rt_se);
-}
-
-static void dequeue_rt_entity_brr(struct sched_rt_entity *rt_se)
-{
-	dequeue_rt_stack_brr(rt_se);
-
-	for_each_sched_rt_entity(rt_se) {
-		struct rt_rq *rt_rq = group_rt_rq(rt_se);
-
-		if (rt_rq && rt_rq->rt_nr_running)
-		__enqueue_rt_entity_brr(rt_se);
-	}
-}
 
 static void dequeue_task_rt_brr(struct rq *rq, struct task_struct *p, int sleep)
 {
@@ -342,34 +326,6 @@ if (p->se.on_rq && p->rt.nr_cpus_allowed > 1)
 enqueue_pushable_task(rq, p);
 }
 
-static void task_tick_rt_brr(struct rq *rq, struct task_struct *p, int queued)
-{
-update_curr_rt_brr(rq);
-
-watchdog(rq, p);
-
-/*
-* RR tasks need a special form of timeslice management.
-* FIFO tasks have no timeslices.
-*/
-if (p->policy != SCHED_RR)
-return;
-
-if (--p->rt.time_slice)
-return;
-
-p->rt.time_slice = DEF_TIMESLICE;
-
-/*
-* Requeue to the end of queue if we are not the only element
-* on the queue:
-*/
-if (p->rt.run_list.prev != p->rt.run_list.next) {
-requeue_task_rt(rq, p, 0);
-set_tsk_need_resched(p);
-}
-}
-
 /*
 * Update the current task's runtime statistics. Skip current tasks that
 * are not in our scheduling class.
@@ -412,6 +368,36 @@ spin_unlock(&rt_rq->rt_runtime_lock);
 }
 }
 
+static void task_tick_rt_brr(struct rq *rq, struct task_struct *p, int queued)
+{
+update_curr_rt_brr(rq);
+
+watchdog(rq, p);
+
+/*
+* RR tasks need a special form of timeslice management.
+* FIFO tasks have no timeslices.
+*/
+if (p->policy != SCHED_RR)
+return;
+
+if (--p->rt.time_slice)
+return;
+
+p->rt.time_slice = DEF_TIMESLICE;
+
+/*
+* Requeue to the end of queue if we are not the only element
+* on the queue:
+*/
+if (p->rt.run_list.prev != p->rt.run_list.next) {
+requeue_task_rt(rq, p, 0);
+set_tsk_need_resched(p);
+}
+}
+
+
+
 static int sched_rt_runtime_exceeded_brr(struct rt_rq *rt_rq)
 {
 u64 runtime = sched_rt_runtime(rt_rq);
@@ -440,38 +426,7 @@ return 0;
 
 
 
-static const struct sched_class brr_sched_class = {
-	.next = &fair_sched_class,
-	.enqueue_task = enqueue_task_rt_brr,
-	.dequeue_task = dequeue_task_rt_brr,
-	.yield_task = yield_task_rt,
 
-	.check_preempt_curr = check_preempt_curr_rt,
-
-	.pick_next_task = pick_next_task_rt_brr,
-	.put_prev_task = put_prev_task_rt_brr,
-
-#ifdef CONFIG_SMP
-	.select_task_rq = select_task_rq_rt,
-
-	.load_balance = load_balance_rt,
-	.move_one_task = move_one_task_rt,
-	.set_cpus_allowed       = set_cpus_allowed_rt,
-	.rq_online              = rq_online_rt,
-	.rq_offline             = rq_offline_rt,
-	.pre_schedule = pre_schedule_rt,
-	.needs_post_schedule = needs_post_schedule_rt,
-	.post_schedule = post_schedule_rt,
-	.task_wake_up = task_wake_up_rt,
-	.switched_from = switched_from_rt,
-#endif
-
-	.set_curr_task          = set_curr_task_rt,
-	.task_tick = task_tick_rt_brr,
-
-	.prio_changed = prio_changed_rt,
-	.switched_to = switched_to_rt,
-};
 
 #ifdef CONFIG_SCHED_DEBUG
 extern void print_rt_rq(struct seq_file *m, int cpu, struct rt_rq *rt_rq);
