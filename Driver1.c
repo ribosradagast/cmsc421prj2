@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 		params.sched_priority=atoi( argv[2]);
 		sched_setscheduler(getpid(),   5 , &params);
 		for(i=0; i<100; i++){
-		printf("Program 1 just ran for the %dth time", i);
+		printf("Program 1 just ran for the %dth time\n", i);
 			strcat(argv[1], "Program 1 just ran for the ");
 			argv[1]+=i;
 			strcat(argv[1], "th time.\n");
