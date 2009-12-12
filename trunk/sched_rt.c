@@ -2,8 +2,6 @@
 * Real-Time Scheduling Class (mapped to the SCHED_FIFO and SCHED_RR
 * policies)
 */
-//method header
-static int getNextBucketNumber(struct rt_rq *rt_rq, int currentBucket);
 
 
 static inline struct task_struct *rt_task_of(struct sched_rt_entity *rt_se)
@@ -799,34 +797,6 @@ struct rt_rq *group_rq = group_rt_rq(rt_se);
 struct list_head *queue = array->queue + rt_se_prio(rt_se);
 struct task_struct *p = rt_task_of(rt_se);
 
-#ifdef CONFIG_BRR_GROUP_SCHED
-	/*
-this is where our 50 lines go
-if p=>bid==-1, search through bitmap of "taken" slots ie 
-int bitmap = int[maxintvalue];
-until we find a 0, then set p=>bid to i
-set bitmap[i]=1
-
-DONE
-Check for if (rt_task_of(rt_se)=>bid == -1)
-if so, loop through available buckets and determine 
-*/
-int i=0;
-int bucketToAddTo = p->bid;
-
-	if(bucketToAddTo==-1){
-		for (i = 0; i < MAX_BRR_PRIO; i++) {
-			if(&rt_rq->numInBucket[i]==0){
-				bucketToAddTo=i;
-				break;
-			}
-		}
-	}
-	rt_rq->numInBucket[bucketToAddTo]++;
-	p->bid=bucketToAddTo;
-#endif
-	
-
 
 
 /*
@@ -849,27 +819,7 @@ static void __dequeue_rt_entity(struct sched_rt_entity *rt_se)
 struct rt_rq *rt_rq = rt_rq_of_se(rt_se);
 struct rt_prio_array *array = &rt_rq->active;
 
-#ifdef CONFIG_BRR_GROUP_SCHED
 
-	/*
-
-DONE: First, remove 1 from the count of bucketarray
-
-compare total running in rq
-
-*/
-int i=0;
-int count=0;
-int bucketToAddTo=rt_task_of(rt_se)->bid;
-rt_rq->numInBucket[bucketToAddTo]--;
-	
-	for (i = 0; i < MAX_BRR_PRIO; i++) {
-			count+=rt_rq->numInBucket[bucketToAddTo];
-		}
-	printk("Number in queue is: %d\n", rt_rq->rt_nr_running);
-	printk("Number counted from array is: %d\n", count);
-	
-#endif
 
 
 
@@ -1089,19 +1039,7 @@ next = list_entry(queue->next, struct sched_rt_entity, run_list);
 return next;
 }
 
-/*
-DONE: get the bucket number that we want to assign the next task to
-*/
-static  int getNextBucketNumber(struct rt_rq *rt_rq, int currentBucket)
-{
-	int offset=0;
-	for(offset=currentBucket+1; offset<=MAX_BRR_PRIO+1;offset++){
-		if(&rt_rq->numInBucket[offset % MAX_BRR_PRIO]!=0){
-			return offset;
-		}
-	}
-	return -1;
-}
+
 
 static struct task_struct *_pick_next_task_rt(struct rq *rq)
 {
@@ -1123,39 +1061,11 @@ return NULL;
 
 
 
-#ifdef CONFIG_BRR_GROUP_SCHED
-//get the currently-running bucket number
-num = getNextBucketNumber(rt_rq,   rq->curr->bid);
-
-do{
-	do {
-		rt_se = pick_next_rt_entity(rq, rt_rq);
-		BUG_ON(!rt_se);
-		rt_rq = group_rt_rq(rt_se);
-	} while (rt_rq);
-
-	p = rt_task_of(rt_se);
-		
-	printk("Bucket id for the one that we've chosen is: %d\n", p->bid);
-	}while(p->bid!=num);
-	
-	
-	/*
-	DONE
-start at the position of the current bucket
-which we thankfully know, because it's stored in the currently-running
-task (p)
-Then we want to find the next-highest bucket (or the first-lowest) bucket
-(using mod)
-then we return the index of this last bucket
-*/
-#else
 do {
 		rt_se = pick_next_rt_entity(rq, rt_rq);
 		BUG_ON(!rt_se);
 		rt_rq = group_rt_rq(rt_se);
 	} while (rt_rq);
-#endif
 
 
 p = rt_task_of(rt_se);
@@ -1847,7 +1757,7 @@ dequeue_pushable_task(rq, p);
 }
 
 static const struct sched_class rt_sched_class = {
-.next = &fair_sched_class,
+.next = &brr_sched_class,
 .enqueue_task = enqueue_task_rt,
 .dequeue_task = dequeue_task_rt,
 .yield_task = yield_task_rt,
