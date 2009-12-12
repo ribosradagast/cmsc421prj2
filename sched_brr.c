@@ -123,13 +123,13 @@ if so, loop through available buckets and determine
 
 	if(bucketToAddTo==-1){
 		for (i = 0; i < MAX_BRR_PRIO; i++) {
-			if(rt_rq->buckets.numInBucket[i]==0){
+			if(rt_rq->buckets->numInBucket[i]==0){
 				bucketToAddTo=i;
 				break;
 			}
 		}
 	}
-	rt_rq->buckets.numInBucket[bucketToAddTo]++;
+	rt_rq->buckets->numInBucket[bucketToAddTo]++;
 	p->bid=bucketToAddTo;
 	
 
@@ -169,10 +169,10 @@ compare total running in rq
 	int i=0;
 	int count=0;
 	int bucketToAddTo=rt_task_of(rt_se)->bid;
-	rt_rq->buckets.numInBucket[bucketToAddTo]--;
+	rt_rq->buckets->numInBucket[bucketToAddTo]--;
 	
 	for (i = 0; i < MAX_BRR_PRIO; i++) {
-		count+=rt_rq->buckets.numInBucket[bucketToAddTo];
+		count+=rt_rq->buckets->numInBucket[bucketToAddTo];
 	}
 	printk("Number in queue is: %lu\n", rt_rq->rt_nr_running);
 	printk("Number counted from array is: %d\n", count);
@@ -337,7 +337,7 @@ static  int getNextBucketNumber(struct rt_rq *rt_rq, int currentBucket)
 	int offset=0;
 	printk("WHOOOOOOO getNextBucketNumber was called!\n");
 	for(offset=currentBucket+1; offset<=MAX_BRR_PRIO+1;offset++){
-		if(rt_rq->buckets.numInBucket[offset % MAX_BRR_PRIO]!=0){
+		if(rt_rq->buckets->numInBucket[offset % MAX_BRR_PRIO]!=0){
 			return offset;
 		}
 	}
