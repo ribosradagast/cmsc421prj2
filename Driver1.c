@@ -2,11 +2,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
-
-// /*
-// 1.c
-// */
-//parameters : address to buffer, bucket ID
+/*
+* parameters : address to buffer, bucket ID
+*/
 int main(int argc, char *argv[]) {
 {
 int i=0;
