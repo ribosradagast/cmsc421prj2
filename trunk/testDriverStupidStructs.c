@@ -33,7 +33,7 @@ TODO: see if this works
 
 int main()
 {
-	struct rt_rq *ourRQ;
+	struct rt_rq *ourRQ = (rt_rq)malloc(sizeof(rt_rq));
 
 	init_rt_rq(ourRQ);
 
