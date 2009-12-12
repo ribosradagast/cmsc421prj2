@@ -8839,7 +8839,7 @@ initialize  array for bucket num_contents
 TODO: see if this works
 malloc
 */
-rt_rq->buckets =(struct bucketArray *)kmalloc(sizeof(struct bucketArray), GFP_KERNEL);
+&rt_rq->buckets =(struct bucketArray *)kmalloc(sizeof(struct bucketArray), GFP_KERNEL);
 #endif
 
 array = &rt_rq->active;
