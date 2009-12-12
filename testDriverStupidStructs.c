@@ -33,9 +33,9 @@ TODO: see if this works
 
 int main()
 {
-	struct rt_rq *ourRQ = (rt_rq)malloc(sizeof(rt_rq));
+	struct rt_rq ourRQ = (struct rt_rq)malloc(sizeof(struct rt_rq));
 
-	init_rt_rq(ourRQ);
+	init_rt_rq(&ourRQ);
 
 	return 0;
 }
