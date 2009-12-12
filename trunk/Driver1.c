@@ -1,6 +1,6 @@
-/*
-1.c
-*/
+// /*
+// 1.c
+// */
 //parameters : address to buffer, bucket ID
 int main(int argc, char *argv[]) {
 {
