@@ -29,6 +29,10 @@
 #define CLONE_NEWNET 0x40000000 /* New network namespace */
 #define CLONE_IO 0x80000000 /* Clone io context */
 
+
+#define CONFIG_BRR_GROUP_SCHED CONFIG_AX25_DAMA_SLAVE  
+
+
 /*
 * Scheduling policies
 */
@@ -1123,7 +1127,6 @@ unsigned int flags; /* per process flags, defined below */
 unsigned int ptrace;
 
 int lock_depth; /* BKL lock depth */
-
 #ifdef CONFIG_BRR_GROUP_SCHED
 /* bucket ID */
 int bid;
