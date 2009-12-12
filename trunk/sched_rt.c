@@ -795,7 +795,6 @@ struct rt_rq *rt_rq = rt_rq_of_se(rt_se);
 struct rt_prio_array *array = &rt_rq->active;
 struct rt_rq *group_rq = group_rt_rq(rt_se);
 struct list_head *queue = array->queue + rt_se_prio(rt_se);
-struct task_struct *p = rt_task_of(rt_se);
 
 
 
@@ -818,9 +817,6 @@ static void __dequeue_rt_entity(struct sched_rt_entity *rt_se)
 {
 struct rt_rq *rt_rq = rt_rq_of_se(rt_se);
 struct rt_prio_array *array = &rt_rq->active;
-
-
-
 
 
 list_del_init(&rt_se->run_list);
@@ -1046,11 +1042,7 @@ static struct task_struct *_pick_next_task_rt(struct rq *rq)
 struct sched_rt_entity *rt_se;
 struct task_struct *p;
 struct rt_rq *rt_rq;
-	
-int num = -42;
-	
-	
-	
+		
 rt_rq = &rq->rt;
 
 if (unlikely(!rt_rq->rt_nr_running))
@@ -1755,6 +1747,41 @@ p->se.exec_start = rq->clock;
 /* The running task is never eligible for pushing */
 dequeue_pushable_task(rq, p);
 }
+
+
+
+static const struct sched_class brr_sched_class = {
+	.next = &fair_sched_class,
+	.enqueue_task = enqueue_task_rt_brr,
+	.dequeue_task = dequeue_task_rt_brr,
+	.yield_task = yield_task_rt,
+
+	.check_preempt_curr = check_preempt_curr_rt,
+
+	.pick_next_task = pick_next_task_rt_brr,
+	.put_prev_task = put_prev_task_rt_brr,
+
+#ifdef CONFIG_SMP
+	.select_task_rq = select_task_rq_rt,
+
+	.load_balance = load_balance_rt,
+	.move_one_task = move_one_task_rt,
+	.set_cpus_allowed       = set_cpus_allowed_rt,
+	.rq_online              = rq_online_rt,
+	.rq_offline             = rq_offline_rt,
+	.pre_schedule = pre_schedule_rt,
+	.needs_post_schedule = needs_post_schedule_rt,
+	.post_schedule = post_schedule_rt,
+	.task_wake_up = task_wake_up_rt,
+	.switched_from = switched_from_rt,
+#endif
+
+	.set_curr_task          = set_curr_task_rt,
+	.task_tick = task_tick_rt_brr,
+
+	.prio_changed = prio_changed_rt,
+	.switched_to = switched_to_rt,
+};
 
 static const struct sched_class rt_sched_class = {
 .next = &brr_sched_class,
