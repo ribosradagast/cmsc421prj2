@@ -172,21 +172,23 @@ static inline int task_has_brr_policy(struct task_struct *p)
 return brr_policy(p->policy);
 }
 
+
 /*
 * This is the priority-queue data structure of the RT scheduling class:
 */
 struct rt_prio_array {
-DECLARE_BITMAP(bitmap, MAX_RT_PRIO+1); /* include 1 bit for delimiter */
-struct list_head queue[MAX_RT_PRIO];
-};
-
+#ifdef CONFIG_BRR_GROUP_SCHED
 /*
 * This is the priority-queue data structure of the BRR scheduling class:
 */
-struct brr_prio_array {
 DECLARE_BITMAP(bitmap, MAX_BRR_PRIO+1); /* include 1 bit for delimiter */
 struct list_head queue[MAX_BRR_PRIO];
+#else
+DECLARE_BITMAP(bitmap, MAX_RT_PRIO+1); /* include 1 bit for delimiter */
+struct list_head queue[MAX_RT_PRIO];
+#endif
 };
+
 
 struct rt_bandwidth {
 /* nests inside the rq lock: */
@@ -276,12 +278,6 @@ hrtimer_cancel(&rt_b->rt_period_timer);
 }
 #endif
 
-#ifdef  CONFIG_BRR_GROUP_SCHED
-static void destroy_rt_bandwidth(struct rt_bandwidth *rt_b)
-{
-hrtimer_cancel(&rt_b->rt_period_timer);
-}
-#endif
 
 
 
@@ -324,13 +320,6 @@ struct task_group {
 	struct rt_bandwidth rt_bandwidth;
 #endif
 
-#ifdef CONFIG_BRR_GROUP_SCHED
-	struct sched_rt_entity **brr_se;
-	struct brr_rq **brr_rq;
-
-	struct rt_bandwidth rt_bandwidth;
-#endif
-
 	struct rcu_head rcu;
 	struct list_head list;
 
@@ -366,10 +355,6 @@ static DEFINE_PER_CPU(struct sched_rt_entity, init_sched_rt_entity);
 static DEFINE_PER_CPU(struct rt_rq, init_rt_rq) ____cacheline_aligned_in_smp;
 #endif /* CONFIG_RT_GROUP_SCHED */
 
-#ifdef CONFIG_BRR_GROUP_SCHED
-static DEFINE_PER_CPU(struct sched_rt_entity, init_sched_brr_entity);
-static DEFINE_PER_CPU(struct brr_rq, init_brr_rq) ____cacheline_aligned_in_smp;
-#endif /* CONFIG_BRR_GROUP_SCHED */
 #else /* !CONFIG_USER_SCHED */
 #define root_task_group init_task_group
 #endif /* CONFIG_USER_SCHED */
@@ -441,11 +426,6 @@ p->se.parent = task_group(p)->se[cpu];
 #ifdef CONFIG_RT_GROUP_SCHED
 p->rt.rt_rq  = task_group(p)->rt_rq[cpu];
 p->rt.parent = task_group(p)->rt_se[cpu];
-#endif
-
-#ifdef CONFIG_BRR_GROUP_SCHED
-p->brr.brr_rq  = task_group(p)->brr_rq[cpu];
-p->brr.parent = task_group(p)->brr_se[cpu];
 #endif
 }
 
@@ -531,9 +511,19 @@ unsigned long rq_weight;
 
 /* Real-Time classes' related field in a runqueue: */
 struct rt_rq {
+
+#ifdef CONFIG_BRR_GROUP_SCHED
+/*
+array for bucket-numofcontents
+numInBucket[i] is the number of processes that have bucket id
+'i' (in bucket 'i')
+*/
+int numInBucket[MAX_BRR_PRIO];
+#endif
+
 struct rt_prio_array active;
 unsigned long rt_nr_running;
-#if defined(CONFIG_SMP) || defined(CONFIG_BRR_GROUP_SCHED)
+#if defined(CONFIG_SMP) || defined(CONFIG_RT_GROUP_SCHED)
 struct {
 int curr; /* highest queued rt task prio */
 #ifdef CONFIG_SMP
@@ -563,46 +553,6 @@ struct sched_rt_entity *rt_se;
 #endif
 };
 
-/* Bucket Round Robin's classes' related field in a runqueue: */
-struct brr_rq {
-/*
-array for bucket-numofcontents
-numInBucket[i] is the number of processes that have bucket id
-'i' (in bucket 'i')
-*/
-int numInBucket[MAX_BRR_PRIO];
-
-struct brr_prio_array active;
-unsigned long brr_nr_running;
-#if defined (CONFIG_SMP) || defined (CONFIG_BRR_GROUP_SCHED)
-struct {
-int curr; /* highest queued rt task prio */
-#ifdef CONFIG_SMP
-int next; /* next highest */
-#endif
-} highest_prio;
-#endif
-#ifdef CONFIG_SMP
-unsigned long brr_nr_migratory;
-unsigned long brr_nr_total;
-int overloaded;
-struct plist_head pushable_tasks;
-#endif
-int rt_throttled;
-u64 rt_time;
-u64 rt_runtime;
-/* Nests inside the rq lock: */
-spinlock_t rt_runtime_lock;
-
-#ifdef CONFIG_BRR_GROUP_SCHED
-unsigned long rt_nr_boosted;
-
-struct rq *rq;
-struct list_head leaf_rt_rq_list;
-struct task_group *tg;
-struct sched_rt_entity *rt_se;
-#endif
-};
 
 #ifdef CONFIG_SMP
 
@@ -675,7 +625,6 @@ u64 nr_switches;
 
 struct cfs_rq cfs;
 struct rt_rq rt;
-struct brr_rq brr;
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
 /* list of leaf cfs_rq on this cpu: */
@@ -683,9 +632,6 @@ struct list_head leaf_cfs_rq_list;
 #endif
 #ifdef CONFIG_RT_GROUP_SCHED
 struct list_head leaf_rt_rq_list;
-#endif
-#ifdef CONFIG_BRR_GROUP_SCHED
-struct list_head leaf_brr_rq_list;
 #endif
 
 /*
@@ -1538,7 +1484,7 @@ static inline void dec_cpu_load(struct rq *rq, unsigned long load)
 update_load_sub(&rq->load, load);
 }
 
-#if (defined(CONFIG_SMP) && defined(CONFIG_FAIR_GROUP_SCHED)) || defined(CONFIG_RT_GROUP_SCHED)|| defined(CONFIG_BRR_GROUP_SCHED)
+#if (defined(CONFIG_SMP) && defined(CONFIG_FAIR_GROUP_SCHED)) || defined(CONFIG_RT_GROUP_SCHED)
 typedef int (*tg_visitor)(struct task_group *, void *);
 
 /*
@@ -1824,7 +1770,7 @@ cfs_rq->shares = shares;
 #include "sched_idletask.c"
 #include "sched_fair.c"
 #include "sched_rt.c"
-#include "sched_brr.c"
+ // #include "sched_brr.c"
 #ifdef CONFIG_SCHED_DEBUG
 # include "sched_debug.c"
 #endif
@@ -1845,12 +1791,7 @@ rq->nr_running--;
 
 static void set_load_weight(struct task_struct *p)
 {
-	if (task_has_rt_policy(p)) {
-		p->se.load.weight = prio_to_weight[0] * 2;
-		p->se.load.inv_weight = prio_to_wmult[0] >> 1;
-		return;
-	}
-	if (task_has_brr_policy(p)) {
+	if (task_has_rt_policy(p)||task_has_brr_policy(p)) {
 		p->se.load.weight = prio_to_weight[0] * 2;
 		p->se.load.inv_weight = prio_to_wmult[0] >> 1;
 		return;
@@ -1926,7 +1867,7 @@ int prio;
 if (task_has_rt_policy(p))
 prio = MAX_RT_PRIO-1 - p->rt_priority;
 else if (task_has_brr_policy(p))
-prio = MAX_BRR_PRIO-1 - p->brr_priority;
+prio = 0;
 else
 prio = __normal_prio(p);
 return prio;
@@ -5693,8 +5634,6 @@ p->sched_class->put_prev_task(rq, p);
 
 if (rt_prio(prio))
 p->sched_class = &rt_sched_class;
-else if (brr_prio(prio))
-p->sched_class = &brr_sched_class;
 else
 p->sched_class = &fair_sched_class;
 
@@ -5951,19 +5890,20 @@ recheck:
 * SCHED_BATCH and SCHED_IDLE is 0.
 */
 
-if(task_has_rt_policy(&p)){
-
+if(task_has_brr_policy(&p)&& param->sched_priority!=-1){
+	if (param->sched_priority < 0 || ||
+			(!p->mm && param->sched_priority > MAX_BRR_PRIO-1))
+		return -EINVAL; 
+	}
+else{
 	if (param->sched_priority < 0 ||
 			(p->mm && param->sched_priority > MAX_USER_RT_PRIO-1) ||
 			(!p->mm && param->sched_priority > MAX_RT_PRIO-1))
 	return -EINVAL;
 	if (rt_policy(policy) != (param->sched_priority != 0))
 	return -EINVAL;
-}else if(task_has_brr_policy(&p) && param->sched_priority!=-1){
-	if (param->sched_priority < 0 || ||
-			(!p->mm && param->sched_priority > MAX_BRR_PRIO-1))
-	return -EINVAL;
-}
+	}
+
 
 	/*
 * Allow unprivileged RT tasks to decrease priority:
@@ -6005,16 +5945,6 @@ if(task_has_rt_policy(&p)){
 * assigned.
 */
 		if (rt_bandwidth_enabled() && rt_policy(policy) &&
-				task_group(p)->rt_bandwidth.rt_runtime == 0)
-		return -EPERM;
-#endif
-
-#ifdef CONFIG_BRR_GROUP_SCHED
-		/*
-* Do not allow realtime tasks into groups that have no runtime
-* assigned.
-*/
-		if (rt_bandwidth_enabled() && brr_policy(policy) &&
 				task_group(p)->rt_bandwidth.rt_runtime == 0)
 		return -EPERM;
 #endif
@@ -8902,6 +8832,15 @@ static void init_rt_rq(struct rt_rq *rt_rq, struct rq *rq)
 struct rt_prio_array *array;
 int i;
 
+#ifdef CONFIG_BRR_GROUP_SCHED
+/*
+initialize  array for bucket num_contents
+*/
+for (i = 0; i < MAX_BRR_PRIO; i++) {
+&brr_rq->numInBucket[i]=0;
+}
+#endif
+
 array = &rt_rq->active;
 for (i = 0; i < MAX_RT_PRIO; i++) {
 INIT_LIST_HEAD(array->queue + i);
@@ -8930,52 +8869,6 @@ spin_lock_init(&rt_rq->rt_runtime_lock);
 #ifdef CONFIG_RT_GROUP_SCHED
 rt_rq->rt_nr_boosted = 0;
 rt_rq->rq = rq;
-#endif
-}
-
-static void init_brr_rq(struct brr_rq *brr_rq, struct rq *rq)
-{
-
-
-struct brr_prio_array *array;
-int i;
-
-/*
-initialize  array for bucket num_contents
-*/
-for (i = 0; i < MAX_BRR_PRIO; i++) {
-&brr_rq->numInBucket[i]=0;
-}
-
-
-array = &brr_rq->active;
-for (i = 0; i < MAX_BRR_PRIO; i++) {
-INIT_LIST_HEAD(array->queue + i);
-__clear_bit(i, array->bitmap);
-}
-/* delimiter for bitsearch: */
-__set_bit(MAX_BRR_PRIO, array->bitmap);
-
-#if defined (CONFIG_SMP) || defined (CONFIG_BRR_GROUP_SCHED)
-brr_rq->highest_prio.curr = MAX_BRR_PRIO;
-#ifdef CONFIG_SMP
-brr_rq->highest_prio.next = MAX_BRR_PRIO;
-#endif
-#endif
-#ifdef CONFIG_SMP
-brr_rq->rt_nr_migratory = 0;
-brr_rq->overloaded = 0;
-plist_head_init(&rq->brr.pushable_tasks, &rq->lock);
-#endif
-
-brr_rq->rt_time = 0;
-brr_rq->rt_throttled = 0;
-brr_rq->rt_runtime = 0;
-spin_lock_init(&brr_rq->rt_runtime_lock);
-
-#ifdef CONFIG_BRR_GROUP_SCHED
-brr_rq->rt_nr_boosted = 0;
-brr_rq->rq = rq;
 #endif
 }
 
@@ -9010,35 +8903,6 @@ se->parent = parent;
 }
 #endif
 
-#ifdef CONFIG_BRR_GROUP_SCHED
-static void init_tg_brr_entry(struct task_group *tg, struct brr_rq *brr_rq,
-struct sched_rt_entity *brr_se, int cpu, int add,
-struct sched_rt_entity *parent)
-{
-struct rq *rq = cpu_rq(cpu);
-
-tg->brr_rq[cpu] = brr_rq;
-init_brr_rq(brr_rq, rq);
-brr_rq->tg = tg;
-brr_rq->brr_se = brr_se;
-brr_rq->rt_runtime = tg->rt_bandwidth.rt_runtime;
-if (add)
-list_add(&brr_rq->leaf_brr_rq_list, &rq->leaf_brr_rq_list);
-
-tg->brr_se[cpu] = brr_se;
-if (!brr_se)
-return;
-
-if (!parent)
-brr_se->brr_rq = &rq->brr;
-else
-brr_se->brr_rq = parent->my_q;
-
-brr_se->my_q = brr_rq;
-brr_se->parent = parent;
-INIT_LIST_HEAD(&rt_se->run_list);
-}
-#endif
 
 
 #ifdef CONFIG_RT_GROUP_SCHED
@@ -9084,9 +8948,6 @@ alloc_size += 2 * nr_cpu_ids * sizeof(void **);
 #ifdef CONFIG_RT_GROUP_SCHED
 alloc_size += 2 * nr_cpu_ids * sizeof(void **);
 #endif
-#ifdef CONFIG_BRR_GROUP_SCHED
-alloc_size += 2 * nr_cpu_ids * sizeof(void **);
-#endif
 #ifdef CONFIG_USER_SCHED
 alloc_size *= 2;
 #endif
@@ -9122,7 +8983,7 @@ ptr += nr_cpu_ids * sizeof(void **);
 init_task_group.rt_rq = (struct rt_rq **)ptr;
 ptr += nr_cpu_ids * sizeof(void **);
 
-#ifdef (CONFIG_USER_SCHED) || defined (CONFIG_BRR_GROUP_SCHED)
+#ifdef (CONFIG_USER_SCHED) || defined (CONFIG_RT_GROUP_SCHED)
 root_task_group.rt_se = (struct sched_rt_entity **)ptr;
 ptr += nr_cpu_ids * sizeof(void **);
 
@@ -9146,7 +9007,7 @@ init_defrootdomain();
 init_rt_bandwidth(&def_rt_bandwidth,
 global_rt_period(), global_rt_runtime());
 
-#if defined (CONFIG_RT_GROUP_SCHED) || defined (CONFIG_BRR_GROUP_SCHED)
+#if defined (CONFIG_RT_GROUP_SCHED) 
 init_rt_bandwidth(&init_task_group.rt_bandwidth,
 global_rt_period(), global_rt_runtime());
 #ifdef CONFIG_USER_SCHED
@@ -9174,7 +9035,6 @@ spin_lock_init(&rq->lock);
 rq->nr_running = 0;
 init_cfs_rq(&rq->cfs, rq);
 init_rt_rq(&rq->rt, rq);
-init_brr_rq(&rq->brr, rq);
 #ifdef CONFIG_FAIR_GROUP_SCHED
 init_task_group.shares = init_task_group_load;
 INIT_LIST_HEAD(&rq->leaf_cfs_rq_list);
@@ -9222,7 +9082,7 @@ root_task_group.se[i]);
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 
 rq->rt.rt_runtime = def_rt_bandwidth.rt_runtime;
-#if defined (CONFIG_RT_GROUP_SCHED) || defined (CONFIG_BRR_GROUP_SCHED)
+#if defined (CONFIG_RT_GROUP_SCHED)
 INIT_LIST_HEAD(&rq->leaf_rt_rq_list);
 #ifdef CONFIG_CGROUP_SCHED
 init_tg_rt_entry(&init_task_group, &rq->rt, NULL, i, 1, NULL);
@@ -9364,7 +9224,7 @@ p->se.sleep_start = 0;
 p->se.block_start = 0;
 #endif
 
-if (!rt_task(p) && !brr_task(p)) {
+if (!rt_task(p) ) {
 /*
 * Renice negative nice level userspace
 * tasks back to 0:
@@ -9610,86 +9470,11 @@ static inline void unregister_rt_sched_group(struct task_group *tg, int cpu)
 
 
 
-
-
-#ifdef CONFIG_BRR_GROUP_SCHED
-static void free_brr_sched_group(struct task_group *tg)
-{
-int i;
-
-destroy_rt_bandwidth(&tg->rt_bandwidth);
-
-for_each_possible_cpu(i) {
-if (tg->brr_rq)
-kfree(tg->brr_rq[i]);
-if (tg->brr_se)
-kfree(tg->brr_se[i]);
-}
-
-kfree(tg->brr_rq);
-kfree(tg->brr_se);
-}
-
-static
-int alloc_brr_sched_group(struct task_group *tg, struct task_group *parent)
-{
-struct brr_rq *brr_rq;
-struct sched_rt_entity *brr_se;
-struct rq *rq;
-int i;
-
-tg->brr_rq = kzalloc(sizeof(brr_rq) * nr_cpu_ids, GFP_KERNEL);
-if (!tg->brr_rq)
-goto err;
-tg->brr_se = kzalloc(sizeof(brr_se) * nr_cpu_ids, GFP_KERNEL);
-if (!tg->brr_se)
-goto err;
-
-init_brr_bandwidth(&tg->brr_bandwidth,
-ktime_to_ns(def_brr_bandwidth.brr_period), 0);
-
-for_each_possible_cpu(i) {
-rq = cpu_rq(i);
-
-brr_rq = kzalloc_node(sizeof(struct brr_rq),
-     GFP_KERNEL, cpu_to_node(i));
-if (!brr_rq)
-goto err;
-
-brr_se = kzalloc_node(sizeof(struct sched_rt_entity),
-     GFP_KERNEL, cpu_to_node(i));
-if (!brr_se)
-goto err;
-
-init_tg_brr_entry(tg, brr_rq, brr_se, i, 0, parent->brr_se[i]);
-}
-
-return 1;
-
-err:
-return 0;
-}
-
-static inline void register_brr_sched_group(struct task_group *tg, int cpu)
-{
-list_add_rcu(&tg->brr_rq[cpu]->leaf_brr_rq_list,
-&cpu_rq(cpu)->leaf_brr_rq_list);
-}
-
-static inline void unregister_brr_sched_group(struct task_group *tg, int cpu)
-{
-list_del_rcu(&tg->brr_rq[cpu]->leaf_brr_rq_list);
-}
-#endif /* CONFIG_BRR_GROUP_SCHED */
-
-
-
 #ifdef CONFIG_GROUP_SCHED
 static void free_sched_group(struct task_group *tg)
 {
 free_fair_sched_group(tg);
 free_rt_sched_group(tg);
-free_brr_sched_group(tg);
 kfree(tg);
 }
 
@@ -9710,8 +9495,6 @@ goto err;
 if (!alloc_rt_sched_group(tg, parent))
 goto err;
 
-if (!alloc_brr_sched_group(tg, parent))
-goto err;
 
 spin_lock_irqsave(&task_group_lock, flags);
 for_each_possible_cpu(i) {
@@ -9891,7 +9674,7 @@ return tg->shares;
 }
 #endif
 
-#if defined (CONFIG_RT_GROUP_SCHED) || defined (CONFIG_BRR_GROUP_SCHED)
+#if defined (CONFIG_RT_GROUP_SCHED) 
 /*
 * Ensure that the real time constraints are schedulable.
 */
@@ -10235,7 +10018,7 @@ return (u64) tg->shares;
 }
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 
-#if defined (CONFIG_RT_GROUP_SCHED) || defined (CONFIG_BRR_GROUP_SCHED)
+#if defined (CONFIG_RT_GROUP_SCHED)
 static int cpu_rt_runtime_write(struct cgroup *cgrp, struct cftype *cft,
 s64 val)
 {
@@ -10277,19 +10060,7 @@ static struct cftype cpu_files[] = {
 .name = "rt_period_us",
 .read_u64 = cpu_rt_period_read_uint,
 .write_u64 = cpu_rt_period_write_uint,
-},
-#endif
-#ifdef CONFIG_BRR_GROUP_SCHED
-{
-.name = "brr_runtime_us",
-.read_s64 = cpu_rt_runtime_read,
-.write_s64 = cpu_rt_runtime_write,
-},
-{
-.name = "brr_period_us",
-.read_u64 = cpu_rt_period_read_uint,
-.write_u64 = cpu_rt_period_write_uint,
-},
+}
 #endif
 };
 
