@@ -515,7 +515,7 @@ unsigned long rq_weight;
 struct rt_rq {
 
 #ifdef CONFIG_BRR_GROUP_SCHED
-struct bucketArray;
+struct bucketArray buckets;
 /*
 array for bucket-numofcontents
 numInBucket[i] is the number of processes that have bucket id
@@ -8839,7 +8839,7 @@ initialize  array for bucket num_contents
 TODO: see if this works
 malloc
 */
-rt_rq->bucketArray =(struct bucketArray *)kmalloc(sizeof(struct bucketArray));
+rt_rq->buckets =(struct bucketArray *)kmalloc(sizeof(struct bucketArray), GFP_KERNEL);
 #endif
 
 array = &rt_rq->active;
