@@ -4,7 +4,6 @@
 
 
 struct rt_rq{
-
 	/*
 array for bucket-numofcontents
 numInBucket[i] is the number of processes that have bucket id
@@ -27,13 +26,13 @@ TODO: see if this works
 */
 	for (i = 0; i < 1000; i++) {
 	/*	rt_rq->numInBucket[i]=0;*/
-		printf("array at %d initialised to 0\n", i);
+		printf("array at %d initialised to %d\n", i, numInBucket[i]);
 	}
 }
 
 int main()
 {
-	struct rt_rq *ourRQ;
+	struct rt_rq *ourRQ={{0}};
 	ourRQ -> numInBucket = (int *)malloc(sizeof(int)*1000);
 
 	init_rt_rq(ourRQ);
