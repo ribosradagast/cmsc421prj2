@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 		for(i=0; i<100; i++){
 			printf("Program 1 just started execution for the %dth time\n", i);
 			for(j=0; j<100000; j++){
-				for(k=0; k<100000; k++){
+				for(k=0; k<10000; k++){
 					j*k;
 				}
 			}
@@ -40,7 +40,6 @@ int main(int argc, char *argv[]) {
 			argv[1]+=i;
 			strcat(argv[1], "th time.\n");
 			
-			sleep(1);
 		}
 		return 0;
 	}
