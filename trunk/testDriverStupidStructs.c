@@ -10,7 +10,7 @@ array for bucket-numofcontents
 numInBucket[i] is the number of processes that have bucket id
 'i' (in bucket 'i')
 */
-	int [] numInBucket;
+int numInBucket[5000] = { 0 };
 } ;
 
 
