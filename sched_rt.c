@@ -3,7 +3,7 @@
 * policies)
 */
 //method header
-static struct int getNextBucketNumber(struct rt_rq *rt_rq, int currentBucket);
+static int getNextBucketNumber(struct rt_rq *rt_rq, int currentBucket);
 
 
 static inline struct task_struct *rt_task_of(struct sched_rt_entity *rt_se)
@@ -797,6 +797,7 @@ struct rt_rq *rt_rq = rt_rq_of_se(rt_se);
 struct rt_prio_array *array = &rt_rq->active;
 struct rt_rq *group_rq = group_rt_rq(rt_se);
 struct list_head *queue = array->queue + rt_se_prio(rt_se);
+struct task_struct *p = rt_task_of(rt_se);
 
 #ifdef CONFIG_BRR_GROUP_SCHED
 	/*
@@ -811,7 +812,7 @@ Check for if (rt_task_of(rt_se)=>bid == -1)
 if so, loop through available buckets and determine 
 */
 int i=0;
-int bucketToAddTo=rt_task_of(rt_se)->bid;
+int bucketToAddTo = p->bid;
 
 	if(bucketToAddTo==-1){
 		for (i = 0; i < MAX_BRR_PRIO; i++) {
@@ -821,7 +822,7 @@ int bucketToAddTo=rt_task_of(rt_se)->bid;
 			}
 		}
 	}
-	&rt_rq->numInBucket[bucketToAddTo]++;
+	&rt_rq->numInBucket[bucketToAddTo]=&rt_rq->numInBucket[bucketToAddTo]+1;
 	&p->bid=bucketToAddTo;
 #endif
 	
@@ -860,7 +861,7 @@ compare total running in rq
 int i=0;
 int count=0;
 int bucketToAddTo=rt_task_of(rt_se)->bid;
-	&rt_rq->numInBucket[bucketToAddTo]--;
+&rt_rq->numInBucket[bucketToAddTo]=&rt_rq->numInBucket[bucketToAddTo]-1;
 	
 	for (i = 0; i < MAX_BRR_PRIO; i++) {
 			count+=&rt_rq->numInBucket[bucketToAddTo];
@@ -1091,7 +1092,7 @@ return next;
 /*
 DONE: get the bucket number that we want to assign the next task to
 */
-static struct int getNextBucketNumber(struct rt_rq *rt_rq, int currentBucket)
+static  int getNextBucketNumber(struct rt_rq *rt_rq, int currentBucket)
 {
 	int offset=0;
 	for(offset=currentBucket+1; offset<=MAX_BRR_PRIO+1;offset++){
