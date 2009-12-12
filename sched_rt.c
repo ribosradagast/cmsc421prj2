@@ -1121,10 +1121,12 @@ return NULL;
 if (rt_rq_throttled(rt_rq))
 return NULL;
 
+
+
+#ifdef CONFIG_BRR_GROUP_SCHED
 //get the currently-running bucket number
 num = getNextBucketNumber(rt_rq,   rq->curr->bid);
 
-#ifdef CONFIG_BRR_GROUP_SCHED
 do{
 	do {
 		rt_se = pick_next_rt_entity(rq, rt_rq);
