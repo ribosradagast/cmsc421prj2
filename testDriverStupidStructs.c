@@ -14,9 +14,9 @@ int numInBucket [5000];
 
 
 
-void init_rt_rq(struct rt_rq *rt_rq);
+void init_rt_rq(struct bucketArray *rt_rq);
 
-void init_rt_rq(struct rt_rq *rt_rq)
+void init_rt_rq(struct bucketArray *rt_rq)
 {
 	int i;
 
