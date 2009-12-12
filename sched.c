@@ -172,6 +172,16 @@ static inline int task_has_brr_policy(struct task_struct *p)
 return brr_policy(p->policy);
 }
 
+struct bucketArray{
+	/*
+	DONE
+array for bucket-numofcontents
+numInBucket[i] is the number of processes that have bucket id
+'i' (in bucket 'i')
+*/
+int numInBucket[MAX_BRR_PRIO];
+} ;
+
 
 /*
 * This is the priority-queue data structure of the RT scheduling class:
@@ -505,12 +515,12 @@ unsigned long rq_weight;
 struct rt_rq {
 
 #ifdef CONFIG_BRR_GROUP_SCHED
+struct bucketArray;
 /*
 array for bucket-numofcontents
 numInBucket[i] is the number of processes that have bucket id
 'i' (in bucket 'i')
 */
-int numInBucket[MAX_BRR_PRIO];
 #endif
 
 struct rt_prio_array active;
@@ -8821,13 +8831,15 @@ struct rt_prio_array *array;
 int i;
 
 #ifdef CONFIG_BRR_GROUP_SCHED
+
+
+
 /*
 initialize  array for bucket num_contents
 TODO: see if this works
+malloc
 */
-for (i = 0; i < MAX_BRR_PRIO-70; i++) {
-&rt_rq->numInBucket[i]=0;
-}
+rt_rq->bucketArray =(struct bucketArray *)kmalloc(sizeof(struct bucketArray));
 #endif
 
 array = &rt_rq->active;
