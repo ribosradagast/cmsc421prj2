@@ -1,3 +1,8 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+
+
 // /*
 // 1.c
 // */
