@@ -10,7 +10,7 @@ array for bucket-numofcontents
 numInBucket[i] is the number of processes that have bucket id
 'i' (in bucket 'i')
 */
-int numInBucket[5000] = { 0 };
+int numInBucket[5000] ;
 } ;
 
 
@@ -26,7 +26,7 @@ initialize  array for bucket num_contents
 TODO: see if this works
 */
 	for (i = 0; i < 1000; i++) {
-		rt_rq->&numInBucket[i]=0;
+		rt_rq->numInBucket[i]=0;
 		printf("array at %d initialised to 0\n", i);
 	}
 }
