@@ -9,7 +9,8 @@ struct sched_param  params;
 params->sched_priority=42;
 sched_setscheduler(getpid(), argv[2], &params);
 for(i=0; i<100; i++){
-puts(argv[1], "Program 1 just ran for the %dth time and is in bucket %d");
+puts(argv[1], "Program 1 just ran for the %dth time.", i);
+sleep(1);
 }
 
 }
