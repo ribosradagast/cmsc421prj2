@@ -174,7 +174,7 @@ compare total running in rq
 	for (i = 0; i < MAX_BRR_PRIO; i++) {
 		count+=rt_rq->numInBucket[bucketToAddTo];
 	}
-	printk("Number in queue is: %d\n", rt_rq->rt_nr_running);
+	printk("Number in queue is: %lu\n", rt_rq->rt_nr_running);
 	printk("Number counted from array is: %d\n", count);
 	
 
@@ -243,6 +243,77 @@ static void enqueue_task_rt_brr(struct rq *rq, struct task_struct *p, int wakeup
 	enqueue_pushable_task(rq, p);
 
 	inc_cpu_load(rq, p->se.load.weight);
+}
+
+
+static int sched_rt_runtime_exceeded_brr(struct rt_rq *rt_rq)
+{
+u64 runtime = sched_rt_runtime(rt_rq);
+
+if (rt_rq->rt_throttled)
+return rt_rq_throttled(rt_rq);
+
+if (sched_rt_runtime(rt_rq) >= sched_rt_period(rt_rq))
+return 0;
+
+balance_runtime(rt_rq);
+runtime = sched_rt_runtime(rt_rq);
+if (runtime == RUNTIME_INF)
+return 0;
+
+if (rt_rq->rt_time > runtime) {
+rt_rq->rt_throttled = 1;
+if (rt_rq_throttled(rt_rq)) {
+sched_rt_rq_dequeue_brr(rt_rq);
+return 1;
+}
+}
+
+return 0;
+}
+
+
+
+/*
+* Update the current task's runtime statistics. Skip current tasks that
+* are not in our scheduling class.
+*/
+static void update_curr_rt_brr(struct rq *rq)
+{
+struct task_struct *curr = rq->curr;
+struct sched_rt_entity *rt_se = &curr->rt;
+struct rt_rq *rt_rq = rt_rq_of_se(rt_se);
+u64 delta_exec;
+
+if (!task_has_rt_policy(curr))
+return;
+
+delta_exec = rq->clock - curr->se.exec_start;
+if (unlikely((s64)delta_exec < 0))
+delta_exec = 0;
+
+schedstat_set(curr->se.exec_max, max(curr->se.exec_max, delta_exec));
+
+curr->se.sum_exec_runtime += delta_exec;
+account_group_exec_runtime(curr, delta_exec);
+
+curr->se.exec_start = rq->clock;
+cpuacct_charge(curr, delta_exec);
+
+if (!rt_bandwidth_enabled())
+return;
+
+for_each_sched_rt_entity(rt_se) {
+rt_rq = rt_rq_of_se(rt_se);
+
+if (sched_rt_runtime(rt_rq) != RUNTIME_INF) {
+spin_lock(&rt_rq->rt_runtime_lock);
+rt_rq->rt_time += delta_exec;
+if (sched_rt_runtime_exceeded_brr(rt_rq))
+resched_task(curr);
+spin_unlock(&rt_rq->rt_runtime_lock);
+}
+}
 }
 
 
@@ -326,47 +397,7 @@ if (p->se.on_rq && p->rt.nr_cpus_allowed > 1)
 enqueue_pushable_task(rq, p);
 }
 
-/*
-* Update the current task's runtime statistics. Skip current tasks that
-* are not in our scheduling class.
-*/
-static void update_curr_rt_brr(struct rq *rq)
-{
-struct task_struct *curr = rq->curr;
-struct sched_rt_entity *rt_se = &curr->rt;
-struct rt_rq *rt_rq = rt_rq_of_se(rt_se);
-u64 delta_exec;
 
-if (!task_has_rt_policy(curr))
-return;
-
-delta_exec = rq->clock - curr->se.exec_start;
-if (unlikely((s64)delta_exec < 0))
-delta_exec = 0;
-
-schedstat_set(curr->se.exec_max, max(curr->se.exec_max, delta_exec));
-
-curr->se.sum_exec_runtime += delta_exec;
-account_group_exec_runtime(curr, delta_exec);
-
-curr->se.exec_start = rq->clock;
-cpuacct_charge(curr, delta_exec);
-
-if (!rt_bandwidth_enabled())
-return;
-
-for_each_sched_rt_entity(rt_se) {
-rt_rq = rt_rq_of_se(rt_se);
-
-if (sched_rt_runtime(rt_rq) != RUNTIME_INF) {
-spin_lock(&rt_rq->rt_runtime_lock);
-rt_rq->rt_time += delta_exec;
-if (sched_rt_runtime_exceeded_brr(rt_rq))
-resched_task(curr);
-spin_unlock(&rt_rq->rt_runtime_lock);
-}
-}
-}
 
 static void task_tick_rt_brr(struct rq *rq, struct task_struct *p, int queued)
 {
@@ -396,33 +427,6 @@ set_tsk_need_resched(p);
 }
 }
 
-
-
-static int sched_rt_runtime_exceeded_brr(struct rt_rq *rt_rq)
-{
-u64 runtime = sched_rt_runtime(rt_rq);
-
-if (rt_rq->rt_throttled)
-return rt_rq_throttled(rt_rq);
-
-if (sched_rt_runtime(rt_rq) >= sched_rt_period(rt_rq))
-return 0;
-
-balance_runtime(rt_rq);
-runtime = sched_rt_runtime(rt_rq);
-if (runtime == RUNTIME_INF)
-return 0;
-
-if (rt_rq->rt_time > runtime) {
-rt_rq->rt_throttled = 1;
-if (rt_rq_throttled(rt_rq)) {
-sched_rt_rq_dequeue_brr(rt_rq);
-return 1;
-}
-}
-
-return 0;
-}
 
 
 
