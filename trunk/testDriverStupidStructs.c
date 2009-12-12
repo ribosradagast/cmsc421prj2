@@ -35,7 +35,7 @@ int main()
 	struct rt_rq *ourRQ={0};
 	ourRQ -> numInBucket = (int *)malloc(sizeof(int)*1000);
 
-	init_rt_rq(ourRQ);
+/*	init_rt_rq(ourRQ);*/
 
 	return 0;
 }
