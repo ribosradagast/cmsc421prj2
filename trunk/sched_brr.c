@@ -12,40 +12,50 @@ static void dequeue_rt_entity_brr(struct sched_rt_entity *rt_se);
 
 static struct task_struct *_pick_next_task_rt_brr(struct rq *rq)
 {
-struct sched_rt_entity *rt_se;
-struct task_struct *p;
-struct rt_rq *rt_rq;
+	struct sched_rt_entity *rt_se;
+	struct task_struct *p;
+	struct rt_rq *rt_rq;
 	
-int num = -42;
-	
-	
-rt_rq = &rq->rt;
-
-if (unlikely(!rt_rq->rt_nr_running))
-return NULL;
-
-if (rt_rq_throttled(rt_rq))
-return NULL;
-
-
-
-//get the currently-running bucket number
-num = getNextBucketNumber(rt_rq,   rq->curr->bid);
-
-do{
-	do {
-		rt_se = pick_next_rt_entity(rq, rt_rq);
-		BUG_ON(!rt_se);
-		rt_rq = group_rt_rq(rt_se);
-	} while (rt_rq);
-
-	p = rt_task_of(rt_se);
-		
-	printk(KERN_CRIT "Bucket id for the one that we've chosen is: %d\n", p->bid);
-	}while(p->bid!=num);
+	int num = -42;
 	
 	
-	/*
+	rt_rq = &rq->rt;
+
+	if (unlikely(!rt_rq->rt_nr_running))
+	return NULL;
+
+	if (rt_rq_throttled(rt_rq))
+	return NULL;
+
+
+
+	//get the currently-running bucket number
+	num = getNextBucketNumber(rt_rq,   rq->curr->bid);
+	if {num != -1){
+			do{
+				do {
+					rt_se = pick_next_rt_entity(rq, rt_rq);
+					BUG_ON(!rt_se);
+					rt_rq = group_rt_rq(rt_se);
+				} while (rt_rq);
+
+				p = rt_task_of(rt_se);
+				
+				printk(KERN_CRIT "Bucket id for the next bucket that we've chosen is: %d\n", p->bid);
+			}while(p->bid!=num);
+		}
+		else{
+	printk(KERN_CRIT "Couldn't find another bucket\n");
+			do {
+				rt_se = pick_next_rt_entity(rq, rt_rq);
+				BUG_ON(!rt_se);
+				rt_rq = group_rt_rq(rt_se);
+			} while (rt_rq);
+
+			p = rt_task_of(rt_se);
+			
+		}
+		/*
 	DONE
 start at the position of the current bucket
 which we thankfully know, because it's stored in the currently-running
@@ -57,11 +67,11 @@ then we return the index of this last bucket
 
 
 
-p = rt_task_of(rt_se);
-p->se.exec_start = rq->clock;
+		p = rt_task_of(rt_se);
+		p->se.exec_start = rq->clock;
 
-return p;
-}
+		return p;
+	}
 
 static struct task_struct *pick_next_task_rt_brr(struct rq *rq)
 {
@@ -122,6 +132,8 @@ if so, loop through available buckets and determine
 	int bucketToAddTo = p->bid;
 
 	if(bucketToAddTo==-1){
+		printk(KERN_CRIT "BRR: Adding new bucket:...\n");
+			
 		for (i = 0; i < MAX_BRR_PRIO; i++) {
 			if(rt_rq->buckets->numInBucket[i]==0){
 				bucketToAddTo=i;
@@ -338,6 +350,8 @@ static  int getNextBucketNumber(struct rt_rq *rt_rq, int currentBucket)
 	printk(KERN_CRIT "WHOOOOOOO getNextBucketNumber was called!\n");
 	for(offset=currentBucket+1; offset<=MAX_BRR_PRIO+1;offset++){
 		if(rt_rq->buckets->numInBucket[offset % MAX_BRR_PRIO]!=0){
+		
+	printk(KERN_CRIT "BRR: Next bucket number offset is %d!\n", offset);
 			return offset;
 		}
 	}
