@@ -36,8 +36,8 @@ int main(int argc, char *argv[]) {
 				}
 			}
 			
-			printf("Program 2 just finished execution for the %dth time\n", i);
 			/*printk(KERN_ALERT "Program 2 just finished execution for the %dth time\n", i);*/
+			printf("Program 2 just finished execution for the %dth time\n", i);
 						
 		}
 		return 0;
