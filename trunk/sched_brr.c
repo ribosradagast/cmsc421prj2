@@ -134,7 +134,7 @@ static void __enqueue_rt_entity_brr(struct sched_rt_entity *rt_se)
 	if(bucketToAddTo==-1){
 		printk(KERN_CRIT "BRR: Adding new bucket:...\n");
 
-		for (i = 0; i < MAX_BRR_PRIO; i++) {
+		for (i = 0; i < MAX_BRR_BUCKET; i++) {
 			if(rt_rq->buckets->numInBucket[i]==0){
 				bucketToAddTo=i;
 				break;
@@ -183,7 +183,7 @@ static void __dequeue_rt_entity_brr(struct sched_rt_entity *rt_se)
 	int bucketToAddTo=rt_task_of(rt_se)->bid;
 	rt_rq->buckets->numInBucket[bucketToAddTo]--;
 
-	for (i = 0; i < MAX_BRR_PRIO; i++) {
+	for (i = 0; i < MAX_BRR_BUCKET; i++) {
 		count+=rt_rq->buckets->numInBucket[bucketToAddTo];
 	}
 	printk(KERN_CRIT "Number in queue is: %lu\n", rt_rq->rt_nr_running);
@@ -348,8 +348,8 @@ static  int getNextBucketNumber(struct rt_rq *rt_rq, int currentBucket)
 {
 	int offset=0;
 	printk(KERN_CRIT "WHOOOOOOO getNextBucketNumber was called!\n");
-	for(offset=currentBucket+1; offset<=MAX_BRR_PRIO+1;offset++){
-		if(rt_rq->buckets->numInBucket[offset % MAX_BRR_PRIO]!=0){
+	for(offset=currentBucket+1; offset<=MAX_BRR_BUCKET+1;offset++){
+		if(rt_rq->buckets->numInBucket[offset % MAX_BRR_BUCKET]!=0){
 
 			printk(KERN_CRIT "BRR: Next bucket number offset is %d!\n", offset);
 			return offset;

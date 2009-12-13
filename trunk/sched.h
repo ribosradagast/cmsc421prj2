@@ -1465,7 +1465,7 @@ struct task_struct {
 #define MAX_PRIO (MAX_RT_PRIO + 40)
 #define DEFAULT_PRIO (MAX_RT_PRIO + 20)
 
-#define MAX_BRR_PRIO 32767
+#define MAX_BRR_BUCKET 32767
 
 
 static inline int rt_prio(int prio)
@@ -1475,12 +1475,6 @@ static inline int rt_prio(int prio)
 	return 0;
 }
 
-static inline int brr_prio(int prio)
-{
-	if (unlikely(prio < MAX_BRR_PRIO))
-		return 1;
-	return 0;
-}
 
 static inline int rt_task(struct task_struct *p)
 {

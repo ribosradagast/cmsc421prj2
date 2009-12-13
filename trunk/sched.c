@@ -150,7 +150,7 @@ static inline void sg_inc_cpu_power(struct sched_group *sg, u32 val)
 
 static inline int rt_policy(int policy)
 {
-	if (unlikely(policy == SCHED_FIFO || policy == SCHED_RR || policy == SCHED_BRR ))
+	if (unlikely(policy == SCHED_FIFO || policy == SCHED_RR ))
 		return 1;
 	return 0;
 }
@@ -181,7 +181,7 @@ struct bucketArray{
 	numInBucket[i] is the number of processes that have bucket id
 	'i' (in bucket 'i')
 	*/
-	int numInBucket[MAX_BRR_PRIO];
+	int numInBucket[MAX_BRR_BUCKET];
 } ;
 
 
@@ -5931,7 +5931,7 @@ recheck:
 	* Allow unprivileged RT tasks to decrease priority:
 	*/
 	if (user) {
-		if (rt_policy(policy)&&!brr_policy(policy)) {
+		if (rt_policy(policy)) {
 			unsigned long rlim_rtprio;
 
 			if (!lock_task_sighand(p, &flags))
