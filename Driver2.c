@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sched.h>
-#include <kernel.h>
+#include <linux/kernel.h>
 #include <string.h>
 
 /*
