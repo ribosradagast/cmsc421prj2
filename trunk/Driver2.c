@@ -25,14 +25,14 @@ int main(int argc, char *argv[]) {
 		params.sched_priority=atoi( argv[2]);
 		sched_setscheduler(getpid(),   6 , &params);
 		for(i=0; i<10; i++){
-			printf("Program 1 just started execution for the %dth time\n", i);
+			printf("Program 2 just started execution for the %dth time\n", i);
 			for(j=0; j<100000; j++){
 				for(k=0; k<1000; k++){
 					j*k;
 				}
 			}
 			
-			printf("Program 1 just finished execution for the %dth time\n", i);
+			printf("Program 2 just finished execution for the %dth time\n", i);
 			argv[1]+=i;
 			strcat(argv[1], "th time.\n");
 			

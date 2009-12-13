@@ -1,22 +1,25 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sched.h>
+#include <string.h>
+
+/*
+* parameters : address to buffer, bucket ID
+*/
+int main() {
+
+	/* put process 1 and 2 in 1 bucket */
+	execlp("process1.out","process1.out", 1);
+	execlp("process2.out","process2.out", 1);
+
+	/* put process 3 in a new bucket (-1) */
+	execlp("process3.out","process3.out", -1);
+
+	/* put process 4 in a new bucket (4) */
+	execlp("process4.out","process4.out", 4);
+
+	printf("Main program has terminated");
+}
 
 
-Home screen:
-
-
-
-1  Create new process
-2  Add process to current bucket
-3  View output
-4  Kill process
-E  Exit
-
-
-1  =>
-Bucket ID and program number (1-10)
-we'll supply a bunch of sample programs (1-10) that I guess do different things
-
-2 => prints some buffer that we've been passing around
-
-3 => takes in program number, kills that process
-
-E=> exit
