@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <sched.h>
+#include <linux/sched.h>
 #include <string.h>
 #include <linux/kernel.h>
 #include <sys/types.h>
