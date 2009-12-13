@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sched.h>
 #include <string.h>
+#include <sys/types.h>
 
 /* Spawn a child process running a new program. PROGRAM is the name
 of the program to run; the path will be searched for this program.
