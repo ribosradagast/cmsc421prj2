@@ -35,27 +35,27 @@ int main() {
 
 char* arg_list[]={"./process1.out", "1", (char *) 0};
 	/* put process 1 and 2 in 1 bucket */
-	printk("Starting process 1 in bucket 1\n");
-	printf("Starting process 1 in bucket 1\n");
+	printk(KERN_ALERT "Starting process 1 in bucket 1\n");
+	printf(KERN_ALERT "Starting process 1 in bucket 1\n");
 	spawn("./process1.out", arg_list);
 	
 	
 	
 char* arg_list2[]= {"./process2.out", "1", (char *) 0};
-	printk("Starting process 2 in bucket 1\n");
-	printf("Starting process 2 in bucket 1\n");
+	printk(KERN_ALERT "Starting process 2 in bucket 1\n");
+	printf(KERN_ALERT "Starting process 2 in bucket 1\n");
 	spawn("./process2.out", arg_list2);
 
 	/* put process 3 in a new bucket (-1) */
 char* arg_list3[]= {"./process3.out", "-1", (char *) 0};
-	printk("Starting process 4 in a new bucket\n");
-	printf("Starting process 3 in a new bucket\n");
+	printk(KERN_ALERT "Starting process 4 in a new bucket\n");
+	printf(KERN_ALERT "Starting process 3 in a new bucket\n");
 	spawn("./process3.out", arg_list3);
 
 	/* put process 4 in a new bucket (4) */
 char* arg_list4[]= {"./process4.out", "4", (char *) 0};
-	printk("Starting process 4 in bucket 4\n");
-	printf("Starting process 4 in bucket 4\n");
+	printk(KERN_ALERT "Starting process 4 in bucket 4\n");
+	printf(KERN_ALERT "Starting process 4 in bucket 4\n");
 	spawn("./process4.out", arg_list4);
 
 	printf("Main program has terminated\n");
