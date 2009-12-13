@@ -20,7 +20,7 @@ int spawn (char* program, char** arg_list)
 	return child_pid;
 	else {
 		/* Now execute PROGRAM, searching for it in the path. */
-		execlp (program, *arg_list);
+		execlp (program, arg_list);
 		/* The execvp function returns only if an error occurs. */
 		fprintf (stderr, "an error occurred in execvp\n");
 		abort ();
