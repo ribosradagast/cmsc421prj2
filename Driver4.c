@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <kernel.h>
 #include <sched.h>
 #include <string.h>
 
