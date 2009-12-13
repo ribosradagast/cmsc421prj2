@@ -5895,9 +5895,10 @@ recheck:
 	policy = oldpolicy = p->policy;
 	else if (policy != SCHED_FIFO && policy != SCHED_RR &&
 			policy != SCHED_NORMAL && policy != SCHED_BATCH &&
-			policy != SCHED_IDLE && policy != SCHED_BRR)
+			policy != SCHED_IDLE && policy != SCHED_BRR){
 printk(KERN_CRIT "BRR Scheduling policy was not recognized!  In sched.c line 5894\n");
 	return -EINVAL;
+	}
 	/*
 * Valid priorities for SCHED_FIFO and SCHED_RR are
 * 1..MAX_USER_RT_PRIO-1, valid priority for SCHED_NORMAL,
