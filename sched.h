@@ -48,6 +48,7 @@
 
 struct sched_param {
 	int sched_priority;
+	int bucket_ID;
 };
 
 #include <asm/param.h> /* for HZ */

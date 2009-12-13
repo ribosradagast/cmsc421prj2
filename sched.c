@@ -5814,7 +5814,7 @@ static struct task_struct *find_process_by_pid(pid_t pid)
 
 /* Actually do priority change: must hold rq lock. */
 static void
-__setscheduler(struct rq *rq, struct task_struct *p, int policy, int prio)
+__setscheduler(struct rq *rq, struct task_struct *p, int policy, int prio, int bucketNumber)
 {
 	BUG_ON(p->se.on_rq);
 
@@ -5830,11 +5830,8 @@ case SCHED_BRR:
 	Take sched_param->sched_priority and assign it to the task's PID
 	return 
 	*/
-	p->bid = prio;
-	printk(KERN_CRIT "BRR We just saved our bucket number into prio!  In sched.c line 5842\n");
-	p->rt_priority = 42;
-	p->normal_prio = normal_prio(42);
-	printk(KERN_CRIT "BRR We just set our real priority to 42!  In sched.c line 5845\n");
+	p->bid = bucketNumber;
+	printk(KERN_CRIT "BRR We just saved our bucket number into bid!  In sched.c line 5842\n");
 	break;
 case SCHED_NORMAL:
 case SCHED_BATCH:
@@ -5848,11 +5845,10 @@ case SCHED_RR:
 
 	}
 
-	if(!task_has_brr_policy(p))
-	{
-		p->rt_priority = prio;
-		p->normal_prio = normal_prio(p);
-	}
+
+	p->rt_priority = prio;
+	p->normal_prio = normal_prio(p);
+
 	/* we are holding p->pi_lock already */
 	p->prio = rt_mutex_getprio(p);
 	set_load_weight(p);
@@ -5915,15 +5911,13 @@ recheck:
 		printk(KERN_CRIT "BRR: Scheduling policy of this task is BRR in __sched_setscheduler 2\n");
 	}
 
-
-	if(!brr_policy(policy)){
 		if (param->sched_priority < 0 ||
 			(p->mm && param->sched_priority > MAX_USER_RT_PRIO-1) ||
 			(!p->mm && param->sched_priority > MAX_RT_PRIO-1))
 			return -EINVAL;
 		if (rt_policy(policy) != (param->sched_priority != 0))
 			return -EINVAL;
-	}
+	
 
 	if(brr_policy(policy)){
 		printk(KERN_CRIT "BRR: \"policy\" var is BRR in __sched_setscheduler 3\n");
@@ -5936,8 +5930,8 @@ recheck:
 	/*
 	* Allow unprivileged RT tasks to decrease priority:
 	*/
-	if (user && !capable(CAP_SYS_NICE)) {
-		if (rt_policy(policy)&&!brr_policy(policy)) {
+	if (user) {
+		if (rt_policy(policy)) {
 			unsigned long rlim_rtprio;
 
 			if (!lock_task_sighand(p, &flags))
@@ -6037,7 +6031,9 @@ recheck:
 		p->sched_class->put_prev_task(rq, p);
 
 	oldprio = p->prio;
-	__setscheduler(rq, p, policy, param->sched_priority);
+	__setscheduler(rq, p, policy, param->sched_priority, param->bucket_ID );
+	
+	
 
 	if (running)
 		p->sched_class->set_curr_task(rq);

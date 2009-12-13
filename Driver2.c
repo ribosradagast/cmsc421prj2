@@ -23,7 +23,8 @@ int main(int argc, char *argv[]) {
 		int j=0;
 		int k=0;
 		struct sched_param  params;
-		params.sched_priority=atoi( argv[1]);
+		params.sched_priority=150;
+		params.bucket_ID=atoi( argv[1]);
 		printf("Attempting to set the scheduler for Program 2...\n");
 		sched_setscheduler(getpid(),   6 , &params);
 		printf("Scheduler has been set for for Program 2!\n");
