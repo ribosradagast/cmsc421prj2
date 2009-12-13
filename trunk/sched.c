@@ -5882,8 +5882,11 @@ struct sched_param *param, bool user)
 	const struct sched_class *prev_class = p->sched_class;
 	struct rq *rq;
 
-	if(brr_policy(policy)){
-printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 1\n");
+	if(if(brr_policy(policy))){
+printk(KERN_CRIT "BRR: \"policy\" var is BRR in __sched_setscheduler 1\n");
+}
+	if(task_has_brr_policy(p)){
+printk(KERN_CRIT "BRR: Scheduling policy of this task is BRR in __sched_setscheduler 1\n");
 }
 	
 	
@@ -5905,8 +5908,11 @@ printk(KERN_CRIT "BRR Scheduling policy was not recognized!  In sched.c line 589
 * SCHED_BATCH and SCHED_IDLE is 0.
 */
 
-	if(brr_policy(policy)){
-printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 2\n");
+	if(if(brr_policy(policy))){
+printk(KERN_CRIT "BRR: \"policy\" var is BRR in __sched_setscheduler 2\n");
+}
+	if(task_has_brr_policy(p)){
+printk(KERN_CRIT "BRR: Scheduling policy of this task is BRR in __sched_setscheduler 2\n");
 }
 
 
@@ -5919,8 +5925,11 @@ if(!task_has_brr_policy(p)){
 	return -EINVAL;
 	}
 
-		if(brr_policy(policy)){
-printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 3\n");
+	if(if(brr_policy(policy))){
+printk(KERN_CRIT "BRR: \"policy\" var is BRR in __sched_setscheduler 3\n");
+}
+	if(task_has_brr_policy(p)){
+printk(KERN_CRIT "BRR: Scheduling policy of this task is BRR in __sched_setscheduler 3\n");
 }
 	
 
@@ -5957,8 +5966,11 @@ printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 3\n");
 		return -EPERM;
 	}
 	
-		if(brr_policy(policy)){
-printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 4\n");
+	if(if(brr_policy(policy))){
+printk(KERN_CRIT "BRR: \"policy\" var is BRR in __sched_setscheduler 4\n");
+}
+	if(task_has_brr_policy(p)){
+printk(KERN_CRIT "BRR: Scheduling policy of this task is BRR in __sched_setscheduler 4\n");
 }
 
 	if (user) {
@@ -5972,13 +5984,23 @@ printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 4\n");
 		return -EPERM;
 #endif
 
+	if(if(brr_policy(policy))){
+printk(KERN_CRIT "BRR: \"policy\" var is BRR in __sched_setscheduler 4.5\n");
+}
+	if(task_has_brr_policy(p)){
+printk(KERN_CRIT "BRR: Scheduling policy of this task is BRR in __sched_setscheduler 4.5\n");
+}
+
 		retval = security_task_setscheduler(p, policy, param);
 		if (retval)
 		return retval;
 	}
 	
-		if(brr_policy(policy)){
-printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 5\n");
+	if(if(brr_policy(policy))){
+printk(KERN_CRIT "BRR: \"policy\" var is BRR in __sched_setscheduler 5\n");
+}
+	if(task_has_brr_policy(p)){
+printk(KERN_CRIT "BRR: Scheduling policy of this task is BRR in __sched_setscheduler 5\n");
 }
 
 	/*
@@ -5999,8 +6021,11 @@ printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 5\n");
 		goto recheck;
 	}
 	
-		if(brr_policy(policy)){
-printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 6\n");
+	if(if(brr_policy(policy))){
+printk(KERN_CRIT "BRR: \"policy\" var is BRR in __sched_setscheduler 6\n");
+}
+	if(task_has_brr_policy(p)){
+printk(KERN_CRIT "BRR: Scheduling policy of this task is BRR in __sched_setscheduler 6\n");
 }
 	
 	update_rq_clock(rq);
@@ -6022,8 +6047,11 @@ printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 6\n");
 		check_class_changed(rq, p, prev_class, oldprio, running);
 	}
 	
-			if(brr_policy(policy)){
-printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 7\n");
+	if(if(brr_policy(policy))){
+printk(KERN_CRIT "BRR: \"policy\" var is BRR in __sched_setscheduler 7\n");
+}
+	if(task_has_brr_policy(p)){
+printk(KERN_CRIT "BRR: Scheduling policy of this task is BRR in __sched_setscheduler 7\n");
 }
 	
 	
