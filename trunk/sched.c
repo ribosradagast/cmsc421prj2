@@ -169,7 +169,7 @@ return 0;
 
 static inline int task_has_brr_policy(struct task_struct *p)
 {
-printk(KERN_CRIT, "BRR This task has BRR policy!  In sched.c line 172\n");
+printk(KERN_CRIT "BRR This task has BRR policy!  In sched.c line 172\n");
 
 return brr_policy(p->policy);
 }
@@ -517,7 +517,7 @@ unsigned long rq_weight;
 struct rt_rq {
 
 #ifdef CONFIG_BRR_GROUP_SCHED
-/*printk(KERN_CRIT, "BRR Buckets struct was defined!  In sched.c line 518\n");
+/*printk(KERN_CRIT "BRR Buckets struct was defined!  In sched.c line 518\n");
 */
 struct bucketArray *buckets;
 /*
@@ -1873,7 +1873,7 @@ int prio;
 if (task_has_rt_policy(p))
 prio = MAX_RT_PRIO-1 - p->rt_priority;
 else if (task_has_brr_policy(p))
-printk(KERN_CRIT, "BRR We just set the prio to 0!  In sched.c line 1876");
+printk(KERN_CRIT "BRR We just set the prio to 0!  In sched.c line 1876");
 prio = 0;
 else
 prio = __normal_prio(p);
@@ -5831,7 +5831,7 @@ p->sched_class = &rt_sched_class;
 break;
 case SCHED_BRR:
 p->sched_class = &brr_sched_class;
-printk(KERN_CRIT, "BRR We just set our scheduler class to BRR!  In sched.c line 5833\n");
+printk(KERN_CRIT "BRR We just set our scheduler class to BRR!  In sched.c line 5833\n");
 
 	/*  
 	We know that there are no errors
@@ -5840,10 +5840,10 @@ Take sched_param->sched_priority and assign it to the task's PID
 return 
 */
 p->bid = prio;
-printk(KERN_CRIT, "BRR We just saved our bucket number into prio!  In sched.c line 5842\n");
+printk(KERN_CRIT "BRR We just saved our bucket number into prio!  In sched.c line 5842\n");
 p->rt_priority = 0;
 p->normal_prio = normal_prio(0);
-printk(KERN_CRIT, "BRR We just set our real priority to 0!  In sched.c line 5845\n");
+printk(KERN_CRIT "BRR We just set our real priority to 0!  In sched.c line 5845\n");
 break;
 }
 
@@ -5890,7 +5890,7 @@ recheck:
 	else if (policy != SCHED_FIFO && policy != SCHED_RR &&
 			policy != SCHED_NORMAL && policy != SCHED_BATCH &&
 			policy != SCHED_IDLE && policy != SCHED_BRR)
-printk(KERN_CRIT, "BRR Scheduling policy was not recognized!  In sched.c line 5894");
+printk(KERN_CRIT "BRR Scheduling policy was not recognized!  In sched.c line 5894");
 	return -EINVAL;
 	/*
 * Valid priorities for SCHED_FIFO and SCHED_RR are
@@ -8849,7 +8849,7 @@ initialize  array for bucket num_contents
 TODO: see if this works
 malloc
 */
-printk(KERN_CRIT, "BRR Buckets struct was initialized!  In sched.c line 8846\n");
+printk(KERN_CRIT "BRR Buckets struct was initialized!  In sched.c line 8846\n");
 rt_rq->buckets =(struct bucketArray *)kmalloc(sizeof(struct bucketArray), GFP_KERNEL);
 #endif
 

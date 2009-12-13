@@ -41,7 +41,7 @@ do{
 
 	p = rt_task_of(rt_se);
 		
-	printk("Bucket id for the one that we've chosen is: %d\n", p->bid);
+	printk(KERN_CRIT "Bucket id for the one that we've chosen is: %d\n", p->bid);
 	}while(p->bid!=num);
 	
 	
@@ -174,8 +174,8 @@ compare total running in rq
 	for (i = 0; i < MAX_BRR_PRIO; i++) {
 		count+=rt_rq->buckets->numInBucket[bucketToAddTo];
 	}
-	printk("Number in queue is: %lu\n", rt_rq->rt_nr_running);
-	printk("Number counted from array is: %d\n", count);
+	printk(KERN_CRIT "Number in queue is: %lu\n", rt_rq->rt_nr_running);
+	printk(KERN_CRIT "Number counted from array is: %d\n", count);
 	
 
 
@@ -335,7 +335,7 @@ DONE: get the bucket number that we want to assign the next task to
 static  int getNextBucketNumber(struct rt_rq *rt_rq, int currentBucket)
 {
 	int offset=0;
-	printk("WHOOOOOOO getNextBucketNumber was called!\n");
+	printk(KERN_CRIT "WHOOOOOOO getNextBucketNumber was called!\n");
 	for(offset=currentBucket+1; offset<=MAX_BRR_PRIO+1;offset++){
 		if(rt_rq->buckets->numInBucket[offset % MAX_BRR_PRIO]!=0){
 			return offset;
