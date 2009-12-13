@@ -4,6 +4,12 @@
 #include <sched.h>
 #include <string.h>
 
+#define SCHED_BRR 6
+
+struct sched_param {
+	int sched_priority;
+	int bucket_ID;
+};
 /*
 * parameters : address to buffer, bucket ID
 */
