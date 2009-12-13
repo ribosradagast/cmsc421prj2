@@ -49,8 +49,8 @@ char* arg_list2[]= {"./process2.out", "1", (char *) 0};
 	/* put process 3 in a new bucket (-1) */
 char* arg_list3[]= {"./process3.out", "-1", (char *) 0};
 	/*printk(KERN_ALERT "Starting process 4 in a new bucket\n");*/
-	/*printf("Starting process 3 in a new bucket\n");
-	spawn("./process3.out", arg_list3);*/
+	printf("Starting process 3 in a new bucket\n");
+	spawn("./process3.out", arg_list3);
 
 	/* put process 4 in a new bucket (4) */
 char* arg_list4[]= {"./process4.out", "4", (char *) 0};
