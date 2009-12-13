@@ -44,12 +44,12 @@
 #define SCHED_IDLE 5
 #define SCHED_BRR 6
 
+#ifdef __KERNEL__
 struct sched_param {
 	int sched_priority;
 	int bucket_ID;
 };
 
-#ifdef __KERNEL__
 
 
 
