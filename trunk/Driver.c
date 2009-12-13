@@ -4,6 +4,28 @@
 #include <sched.h>
 #include <string.h>
 
+/* Spawn a child process running a new program. PROGRAM is the name
+of the program to run; the path will be searched for this program.
+ARG_LIST is a NULL-terminated list of character strings to be
+passed as the program’s argument list. Returns the process ID of
+the spawned process. */
+int spawn (char* program, char** arg_list)
+{
+	pid_t child_pid;
+	/* Duplicate this process. */
+	child_pid = fork ();
+	if (child_pid != 0)
+	/* This is the parent process. */
+	return child_pid;
+	else {
+		/* Now execute PROGRAM, searching for it in the path. */
+		execlp (program, arg_list);
+		/* The execvp function returns only if an error occurs. */
+		fprintf (stderr, “an error occurred in execvp\n”);
+		abort ();
+	}
+}
+
 /*
 * parameters : address to buffer, bucket ID
 */
@@ -11,21 +33,18 @@ int main() {
 
 	/* put process 1 and 2 in 1 bucket */
 	printf("Starting process 1 in bucket 1\n");
-	fork();
-	execlp("./process1.out","./process1.out", "1", (char *) 0);
+	spawn("./process1.out", {"./process1.out", "1", (char *) 0});
+	
 	printf("Starting process 2 in bucket 1\n");
-	fork();
-	execlp("./process2.out","./process2.out", "1", (char *) 0);
+	spawn("./process2.out", {"./process2.out", "1", (char *) 0});
 
 	/* put process 3 in a new bucket (-1) */
 	printf("Starting process 3 in a new bucket\n");
-	fork();
-	execlp("./process3.out","./process3.out", "-1", (char *) 0);
+	spawn("./process3.out", {"./process3.out", "-1", (char *) 0});
 
 	/* put process 4 in a new bucket (4) */
 	printf("Starting process 4 in bucket 4\n");
-	fork();
-	execlp("./process4.out","./process4.out", "4", (char *) 0);
+	spawn("./process4.out", {"./process4.out", "4", (char *) 0});
 
 	printf("Main program has terminated\n");
 	return 0;
