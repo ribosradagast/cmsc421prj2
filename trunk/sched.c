@@ -5916,7 +5916,7 @@ printk(KERN_CRIT "BRR: Scheduling policy of this task is BRR in __sched_setsched
 }
 
 
-if(!task_has_brr_policy(p)){
+if(!brr_policy(policy)){
 	if (param->sched_priority < 0 ||
 			(p->mm && param->sched_priority > MAX_USER_RT_PRIO-1) ||
 			(!p->mm && param->sched_priority > MAX_RT_PRIO-1))
@@ -5973,7 +5973,7 @@ printk(KERN_CRIT "BRR: \"policy\" var is BRR in __sched_setscheduler 4\n");
 printk(KERN_CRIT "BRR: Scheduling policy of this task is BRR in __sched_setscheduler 4\n");
 }
 
-	if (user) {
+	if (user&&!brr_policy(policy)) {
 #ifdef CONFIG_RT_GROUP_SCHED
 		/*
 * Do not allow realtime tasks into groups that have no runtime
