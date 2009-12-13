@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 		for(i=0; i<10; i++){
 			printf("Program 3 just started execution for the %dth time\n", i);
 			for(j=0; j<100000; j++){
-				for(k=0; k<10000; k++){
+				for(k=0; k<5000; k++){
 					j*k;
 				}
 			}
