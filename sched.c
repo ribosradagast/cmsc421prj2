@@ -1872,9 +1872,6 @@ static inline int normal_prio(struct task_struct *p)
 
 	if (task_has_rt_policy(p))
 		prio = MAX_RT_PRIO-1 - p->rt_priority;
-	else if (task_has_brr_policy(p)){
-		printk(KERN_CRIT "BRR We just set the prio to 0!  In sched.c line 1876");
-		prio = 0;}
 	else
 		prio = __normal_prio(p);
 	return prio;
@@ -2585,7 +2582,7 @@ void sched_fork(struct task_struct *p, int clone_flags)
 	* Make sure we do not leak PI boosting priority to the child:
 	*/
 	p->prio = current->normal_prio;
-	if (!rt_prio(p->prio)||!task_has_brr_policy(p))
+	if (!rt_prio(p->prio))
 		p->sched_class = &fair_sched_class;
 
 #if defined(CONFIG_SCHEDSTATS) || defined(CONFIG_TASK_DELAY_ACCT)
@@ -5911,12 +5908,16 @@ recheck:
 		printk(KERN_CRIT "BRR: Scheduling policy of this task is BRR in __sched_setscheduler 2\n");
 	}
 
+	
 		if (param->sched_priority < 0 ||
 			(p->mm && param->sched_priority > MAX_USER_RT_PRIO-1) ||
-			(!p->mm && param->sched_priority > MAX_RT_PRIO-1))
+			(!p->mm && param->sched_priority > MAX_RT_PRIO-1)){
+				printk(KERN_CRIT "BRR: Error condition 1\n");
+			return -EINVAL;}
+		if (rt_policy(policy) != (param->sched_priority != 0)){
+			printk(KERN_CRIT "BRR: Error condition 2\n");
 			return -EINVAL;
-		if (rt_policy(policy) != (param->sched_priority != 0))
-			return -EINVAL;
+			}
 	
 
 	if(brr_policy(policy)){
@@ -5934,30 +5935,40 @@ recheck:
 		if (rt_policy(policy)) {
 			unsigned long rlim_rtprio;
 
-			if (!lock_task_sighand(p, &flags))
-				return -ESRCH;
+			if (!lock_task_sighand(p, &flags)){
+			printk(KERN_CRIT "BRR: Error condition 3\n");
+				return -ESRCH;}
 			rlim_rtprio = p->signal->rlim[RLIMIT_RTPRIO].rlim_cur;
 			unlock_task_sighand(p, &flags);
 
 			/* can't set/change the rt policy */
-			if (policy != p->policy && !rlim_rtprio)
-				return -EPERM;
+			if (policy != p->policy && !rlim_rtprio){
+			printk(KERN_CRIT "BRR: Error condition 4\n");
+				return -EPERM;}
 
 			/* can't increase priority */
 			if (param->sched_priority > p->rt_priority &&
-				param->sched_priority > rlim_rtprio)
+				param->sched_priority > rlim_rtprio){
+			printk(KERN_CRIT "BRR: Error condition 5\n");
+				
 				return -EPERM;
+				}
 		}
 		/*
 		* Like positive nice levels, dont allow tasks to
 		* move out of SCHED_IDLE either:
 		*/
-		if (p->policy == SCHED_IDLE && policy != SCHED_IDLE)
-			return -EPERM;
-
+		if (p->policy == SCHED_IDLE && policy != SCHED_IDLE){
+			printk(KERN_CRIT "BRR: Error condition 6\n");
+				
+				return -EPERM;
+				}
 		/* can't change other user's priorities */
-		if (!check_same_owner(p))
-			return -EPERM;
+		if (!check_same_owner(p)){
+			printk(KERN_CRIT "BRR: Error condition 7\n");
+				
+				return -EPERM;
+				}
 	}
 
 	if(brr_policy(policy)){
@@ -5974,8 +5985,11 @@ recheck:
 		* assigned.
 		*/
 		if (rt_bandwidth_enabled() && rt_policy(policy) &&
-			task_group(p)->rt_bandwidth.rt_runtime == 0)
-			return -EPERM;
+			task_group(p)->rt_bandwidth.rt_runtime == 0){
+			printk(KERN_CRIT "BRR: Error condition 8\n");
+				
+				return -EPERM;
+				}
 #endif
 
 		if(brr_policy(policy)){
@@ -5986,8 +6000,11 @@ recheck:
 		}
 
 		retval = security_task_setscheduler(p, policy, param);
-		if (retval)
-			return retval;
+		if (retval){
+			printk(KERN_CRIT "BRR: Error condition 9\n");
+				
+				return retval;
+				}
 	}
 
 	if(brr_policy(policy)){
@@ -6549,11 +6566,11 @@ SYSCALL_DEFINE1(sched_get_priority_min, int, policy)
 	int ret = -EINVAL;
 
 	switch (policy) {
+case SCHED_BRR:
 case SCHED_FIFO:
 case SCHED_RR:
 	ret = 1;
 	break;
-case SCHED_BRR:
 case SCHED_NORMAL:
 case SCHED_BATCH:
 case SCHED_IDLE:
