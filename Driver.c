@@ -20,6 +20,7 @@ int main() {
 	execlp("process4.out","process4.out", 4);
 
 	printf("Main program has terminated");
+	return 0;
 }
 
 
