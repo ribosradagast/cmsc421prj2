@@ -1872,9 +1872,9 @@ int prio;
 
 if (task_has_rt_policy(p))
 prio = MAX_RT_PRIO-1 - p->rt_priority;
-else if (task_has_brr_policy(p))
+else if (task_has_brr_policy(p)){
 printk(KERN_CRIT "BRR We just set the prio to 0!  In sched.c line 1876");
-prio = 0;
+prio = 0;}
 else
 prio = __normal_prio(p);
 return prio;
