@@ -162,7 +162,7 @@ return rt_policy(p->policy);
 
 static inline int brr_policy(int policy)
 {
-if (unlikely(policy == SCHED_BRR )){
+if (policy == SCHED_BRR ){
 printk(KERN_CRIT "BRR This task has BRR policy!  In sched.c line 166\n");
 return 1;
 }
@@ -5882,6 +5882,11 @@ struct sched_param *param, bool user)
 	const struct sched_class *prev_class = p->sched_class;
 	struct rq *rq;
 
+	if(brr_policy(policy)){
+printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 1\n");
+}
+	
+	
 	/* may grab non-irq protected spin_locks */
 	BUG_ON(in_interrupt());
 recheck:
@@ -5899,6 +5904,11 @@ printk(KERN_CRIT "BRR Scheduling policy was not recognized!  In sched.c line 589
 * SCHED_BATCH and SCHED_IDLE is 0.
 */
 
+	if(brr_policy(policy)){
+printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 2\n");
+}
+
+
 if(!task_has_brr_policy(p)){
 	if (param->sched_priority < 0 ||
 			(p->mm && param->sched_priority > MAX_USER_RT_PRIO-1) ||
@@ -5908,6 +5918,10 @@ if(!task_has_brr_policy(p)){
 	return -EINVAL;
 	}
 
+		if(brr_policy(policy)){
+printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 3\n");
+}
+	
 
 	/*
 * Allow unprivileged RT tasks to decrease priority:
@@ -5941,6 +5955,10 @@ if(!task_has_brr_policy(p)){
 		if (!check_same_owner(p))
 		return -EPERM;
 	}
+	
+		if(brr_policy(policy)){
+printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 4\n");
+}
 
 	if (user) {
 #ifdef CONFIG_RT_GROUP_SCHED
@@ -5957,6 +5975,10 @@ if(!task_has_brr_policy(p)){
 		if (retval)
 		return retval;
 	}
+	
+		if(brr_policy(policy)){
+printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 5\n");
+}
 
 	/*
 * make sure no PI-waiters arrive (or leave) while we are
@@ -5975,6 +5997,11 @@ if(!task_has_brr_policy(p)){
 		spin_unlock_irqrestore(&p->pi_lock, flags);
 		goto recheck;
 	}
+	
+		if(brr_policy(policy)){
+printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 6\n");
+}
+	
 	update_rq_clock(rq);
 	on_rq = p->se.on_rq;
 	running = task_current(rq, p);
@@ -5993,6 +6020,12 @@ if(!task_has_brr_policy(p)){
 
 		check_class_changed(rq, p, prev_class, oldprio, running);
 	}
+	
+			if(brr_policy(policy)){
+printk(KERN_CRIT "BRR Scheduling policy was BRR in __sched_setscheduler 7\n");
+}
+	
+	
 	__task_rq_unlock(rq);
 	spin_unlock_irqrestore(&p->pi_lock, flags);
 
@@ -6014,6 +6047,9 @@ if(!task_has_brr_policy(p)){
 int sched_setscheduler(struct task_struct *p, int policy,
        struct sched_param *param)
 {
+if(brr_policy(policy)){
+printk(KERN_CRIT "BRR Scheduling policy was BRR in sched_setscheduler\n");
+}
 return __sched_setscheduler(p, policy, param, true);
 }
 EXPORT_SYMBOL_GPL(sched_setscheduler);
@@ -6041,6 +6077,11 @@ do_sched_setscheduler(pid_t pid, int policy, struct sched_param __user *param)
 struct sched_param lparam;
 struct task_struct *p;
 int retval;
+
+if(brr_policy(policy)){
+printk(KERN_CRIT "BRR Scheduling policy was BRR in do_sched_setscheduler\n");
+}
+
 
 if (!param || pid < 0)
 return -EINVAL;
@@ -6070,6 +6111,9 @@ struct sched_param __user *, param)
 if (policy < 0)
 return -EINVAL;
 
+if(brr_policy(policy)){
+printk(KERN_CRIT "BRR Scheduling policy was BRR in sys_sched_setscheduler\n");
+}
 return do_sched_setscheduler(pid, policy, param);
 }
 
