@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 		params.sched_priority=atoi( argv[1]);
 		sched_setscheduler(getpid(),   6 , &params);
 		for(i=0; i<10; i++){
-			printk(KERN_ALERT "Program 3 just started execution for the %dth time\n", i);
+			/*printk(KERN_ALERT "Program 3 just started execution for the %dth time\n", i);*/
 			printf("Program 3 just started execution for the %dth time\n", i);
 			for(j=0; j<100000; j++){
 				for(k=0; k<5000; k++){
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 				}
 			}
 			
-			printk(KERN_ALERT "Program 3 just finished execution for the %dth time\n", i);
+			/*printk(KERN_ALERT "Program 3 just finished execution for the %dth time\n", i);*/
 			printf("Program 3 just finished execution for the %dth time\n", i);
 						
 		}
