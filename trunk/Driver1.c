@@ -21,8 +21,8 @@ int main(int argc, char *argv[]) {
 		int i=0;
 		
 		int j=0;
-		int k=0;
-		struct sched_param  params ={50, atoi( argv[1])};
+		int k= atoi( argv[1] );
+		struct sched_param  params = { 50,  k };
 		printf("Attempting to set the scheduler for Program 1...\n");
 		i=sched_setscheduler(getpid(),   6 , &params);
 		printf("Scheduler has been set for for Program 1!  Return value was: %d\n", i);
