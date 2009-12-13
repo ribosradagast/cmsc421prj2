@@ -517,8 +517,8 @@ unsigned long rq_weight;
 struct rt_rq {
 
 #ifdef CONFIG_BRR_GROUP_SCHED
-printk(KERN_CRIT, "BRR Buckets struct was defined!  In sched.c line 518\n");
-
+/*printk(KERN_CRIT, "BRR Buckets struct was defined!  In sched.c line 518\n");
+*/
 struct bucketArray *buckets;
 /*
 array for bucket-numofcontents
