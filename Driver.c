@@ -36,7 +36,7 @@ int main() {
 char* arg_list[]={"./process1.out", "1", (char *) 0};
 	/* put process 1 and 2 in 1 bucket */
 	/*printk(KERN_ALERT "Starting process 1 in bucket 1\n");*/
-	printf(KERN_ALERT "Starting process 1 in bucket 1\n");
+	printf("Starting process 1 in bucket 1\n");
 	spawn("./process1.out", arg_list);
 	
 	
