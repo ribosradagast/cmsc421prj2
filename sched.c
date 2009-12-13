@@ -5832,9 +5832,9 @@ case SCHED_BRR:
 	*/
 	p->bid = prio;
 	printk(KERN_CRIT "BRR We just saved our bucket number into prio!  In sched.c line 5842\n");
-	p->rt_priority = 0;
-	p->normal_prio = normal_prio(0);
-	printk(KERN_CRIT "BRR We just set our real priority to 0!  In sched.c line 5845\n");
+	p->rt_priority = 42;
+	p->normal_prio = normal_prio(42);
+	printk(KERN_CRIT "BRR We just set our real priority to 42!  In sched.c line 5845\n");
 	break;
 case SCHED_NORMAL:
 case SCHED_BATCH:
@@ -5973,7 +5973,7 @@ recheck:
 		printk(KERN_CRIT "BRR: Scheduling policy of this task is BRR in __sched_setscheduler 4\n");
 	}
 
-	if (user&&!brr_policy(policy)) {
+	if (user) {
 #ifdef CONFIG_RT_GROUP_SCHED
 		/*
 		* Do not allow realtime tasks into groups that have no runtime
