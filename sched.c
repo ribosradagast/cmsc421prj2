@@ -162,15 +162,15 @@ return rt_policy(p->policy);
 
 static inline int brr_policy(int policy)
 {
-if (unlikely(policy == SCHED_BRR ))
+if (unlikely(policy == SCHED_BRR )){
+printk(KERN_CRIT "BRR This task has BRR policy!  In sched.c line 166\n");
 return 1;
+}
 return 0;
 }
 
 static inline int task_has_brr_policy(struct task_struct *p)
 {
-printk(KERN_CRIT "BRR This task has BRR policy!  In sched.c line 172\n");
-
 return brr_policy(p->policy);
 }
 
@@ -5820,15 +5820,6 @@ BUG_ON(p->se.on_rq);
 
 p->policy = policy;
 switch (p->policy) {
-case SCHED_NORMAL:
-case SCHED_BATCH:
-case SCHED_IDLE:
-p->sched_class = &fair_sched_class;
-break;
-case SCHED_FIFO:
-case SCHED_RR:
-p->sched_class = &rt_sched_class;
-break;
 case SCHED_BRR:
 p->sched_class = &brr_sched_class;
 printk(KERN_CRIT "BRR We just set our scheduler class to BRR!  In sched.c line 5833\n");
@@ -5845,6 +5836,16 @@ p->rt_priority = 0;
 p->normal_prio = normal_prio(0);
 printk(KERN_CRIT "BRR We just set our real priority to 0!  In sched.c line 5845\n");
 break;
+case SCHED_NORMAL:
+case SCHED_BATCH:
+case SCHED_IDLE:
+p->sched_class = &fair_sched_class;
+break;
+case SCHED_FIFO:
+case SCHED_RR:
+p->sched_class = &rt_sched_class;
+break;
+
 }
 
 if(!task_has_brr_policy(p))
@@ -5890,7 +5891,7 @@ recheck:
 	else if (policy != SCHED_FIFO && policy != SCHED_RR &&
 			policy != SCHED_NORMAL && policy != SCHED_BATCH &&
 			policy != SCHED_IDLE && policy != SCHED_BRR)
-printk(KERN_CRIT "BRR Scheduling policy was not recognized!  In sched.c line 5894");
+printk(KERN_CRIT "BRR Scheduling policy was not recognized!  In sched.c line 5894\n");
 	return -EINVAL;
 	/*
 * Valid priorities for SCHED_FIFO and SCHED_RR are
@@ -5898,12 +5899,7 @@ printk(KERN_CRIT "BRR Scheduling policy was not recognized!  In sched.c line 589
 * SCHED_BATCH and SCHED_IDLE is 0.
 */
 
-if(task_has_brr_policy(p)){
-	if ((param->sched_priority < -1) || 
-			(!p->mm && param->sched_priority > MAX_BRR_PRIO-1))
-		return -EINVAL; 
-	}
-else{
+if(!task_has_brr_policy(p)){
 	if (param->sched_priority < 0 ||
 			(p->mm && param->sched_priority > MAX_USER_RT_PRIO-1) ||
 			(!p->mm && param->sched_priority > MAX_RT_PRIO-1))
@@ -5917,7 +5913,7 @@ else{
 * Allow unprivileged RT tasks to decrease priority:
 */
 	if (user && !capable(CAP_SYS_NICE)) {
-		if (rt_policy(policy)) {
+		if (rt_policy(policy)&&!brr_policy(policy)) {
 			unsigned long rlim_rtprio;
 
 			if (!lock_task_sighand(p, &flags))
