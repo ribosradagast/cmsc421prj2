@@ -31,7 +31,7 @@ static struct task_struct *_pick_next_task_rt_brr(struct rq *rq)
 
 	//get the currently-running bucket number
 	num = getNextBucketNumber(rt_rq,   rq->curr->bid);
-	if {num != -1){
+	if (num != -1){
 			do{
 				do {
 					rt_se = pick_next_rt_entity(rq, rt_rq);
