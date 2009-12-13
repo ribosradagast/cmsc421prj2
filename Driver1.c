@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 		params.sched_priority=50;
 		params.bucket_ID=atoi( argv[1]);
 		printf("Attempting to set the scheduler for Program 1...\n");
-		i=sched_setscheduler(getpid(),   6 , &params);
+		i=sched_setscheduler(getpid(),   SCHED_BRR , &params);
 		printf("Scheduler has been set for for Program 1!  Return value was: %d\n", i);
 		for(i=0; i<10; i++){
 		/*	printk(KERN_ALERT "Program 1 just started execution for the %dth time\n", i);*/
