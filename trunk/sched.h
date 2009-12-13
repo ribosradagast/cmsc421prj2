@@ -1128,8 +1128,8 @@ unsigned int ptrace;
 
 int lock_depth; /* BKL lock depth */
 #ifdef CONFIG_BRR_GROUP_SCHED
-printk(KERN_CRIT, "BRR Bucket ID was defined!  In sched.h line 1131\n");
-/* bucket ID */
+/*printk(KERN_CRIT, "BRR Bucket ID was defined!  In sched.h line 1131\n");
+ bucket ID */
 int bid;
 #endif
 
