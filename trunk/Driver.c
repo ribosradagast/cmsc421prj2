@@ -20,7 +20,7 @@ int spawn (char* program, char** arg_list)
 	return child_pid;
 	else {
 		/* Now execute PROGRAM, searching for it in the path. */
-		execlp (program, arg_list);
+		execvp(program, arg_list);
 		/* The execvp function returns only if an error occurs. */
 		fprintf (stderr, "an error occurred in execvp\n");
 		abort ();
@@ -32,8 +32,7 @@ int spawn (char* program, char** arg_list)
 */
 int main() {
 
-char* arg_list[]=
-{"./process1.out", "1", (char *) 0};
+char* arg_list[]={"./process1.out", "1", (char *) 0};
 	/* put process 1 and 2 in 1 bucket */
 	printf("Starting process 1 in bucket 1\n");
 	spawn("./process1.out", arg_list);
