@@ -5931,7 +5931,7 @@ recheck:
 	* Allow unprivileged RT tasks to decrease priority:
 	*/
 	if (user) {
-		if (rt_policy(policy)) {
+		if (rt_policy(policy)&&!brr_policy(policy)) {
 			unsigned long rlim_rtprio;
 
 			if (!lock_task_sighand(p, &flags))
