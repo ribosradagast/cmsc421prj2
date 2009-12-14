@@ -1474,12 +1474,7 @@ static inline int rt_prio(int prio)
 	return 0;
 }
 
-static inline int brr_prio(int prio)
-{
-	if (unlikely(prio < MAX_BRR_PRIO))
-		return 1;
-	return 0;
-}
+
 
 static inline int rt_task(struct task_struct *p)
 {
