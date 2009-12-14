@@ -25,8 +25,8 @@ int main(int argc, char *argv[]) {
 		struct sched_param  params;
 		params.sched_priority=atoi( argv[1]);
 		printf("Attempting to set the scheduler for Program 4...\n");
-		sched_setscheduler(getpid(),   6 , &params);
-		printf("Scheduler has been set for for Program 4!\n");
+		i=sched_setscheduler(getpid(),   6 , &params);
+		printf("Scheduler has been set for for Program 4! Return value is: %d\n", i);
 		for(i=0; i<10; i++){
 			/*printk(KERN_ALERT "Program 4 just started execution for the %dth time\n", i);*/
 			printf("Program 4 just started execution for the %dth time\n", i);

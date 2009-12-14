@@ -5811,7 +5811,7 @@ static struct task_struct *find_process_by_pid(pid_t pid)
 
 /* Actually do priority change: must hold rq lock. */
 static void
-__setscheduler(struct rq *rq, struct task_struct *p, int policy, int prio, int bucketNumber)
+__setscheduler(struct rq *rq, struct task_struct *p, int policy, int prio)
 {
 	BUG_ON(p->se.on_rq);
 
@@ -6048,7 +6048,7 @@ recheck:
 		p->sched_class->put_prev_task(rq, p);
 
 	oldprio = p->prio;
-	__setscheduler(rq, p, policy, param->sched_priority, param->bucket_ID );
+	__setscheduler(rq, p, policy, param->sched_priority );
 	
 	
 
@@ -7073,7 +7073,7 @@ void sched_idle_next(void)
 	*/
 	spin_lock_irqsave(&rq->lock, flags);
 
-	__setscheduler(rq, p, SCHED_FIFO, MAX_RT_PRIO-1, 0);
+	__setscheduler(rq, p, SCHED_FIFO, MAX_RT_PRIO-1);
 
 	update_rq_clock(rq);
 	activate_task(rq, p, 0);
@@ -7360,7 +7360,7 @@ case CPU_UP_PREPARE_FROZEN:
 	kthread_bind(p, cpu);
 	/* Must be high prio: stop_machine expects to yield to it. */
 	rq = task_rq_lock(p, &flags);
-	__setscheduler(rq, p, SCHED_FIFO, MAX_RT_PRIO-1, 0);
+	__setscheduler(rq, p, SCHED_FIFO, MAX_RT_PRIO-1);
 	task_rq_unlock(rq, &flags);
 	cpu_rq(cpu)->migration_thread = p;
 	break;
@@ -7405,7 +7405,7 @@ case CPU_DEAD_FROZEN:
 	update_rq_clock(rq);
 	deactivate_task(rq, rq->idle, 0);
 	rq->idle->static_prio = MAX_PRIO;
-	__setscheduler(rq, rq->idle, SCHED_NORMAL, 0, 0);
+	__setscheduler(rq, rq->idle, SCHED_NORMAL, 0);
 	rq->idle->sched_class = &idle_sched_class;
 	migrate_dead_tasks(cpu);
 	spin_unlock_irq(&rq->lock);
@@ -9290,7 +9290,7 @@ static void normalize_task(struct rq *rq, struct task_struct *p)
 	on_rq = p->se.on_rq;
 	if (on_rq)
 		deactivate_task(rq, p, 0);
-	__setscheduler(rq, p, SCHED_NORMAL, 0, 0);
+	__setscheduler(rq, p, SCHED_NORMAL, 0);
 	if (on_rq) {
 		activate_task(rq, p, 0);
 		resched_task(rq->curr);
