@@ -5911,7 +5911,7 @@ recheck:
 		printk(KERN_CRIT "BRR: Scheduling policy of this task is BRR in __sched_setscheduler 2\n");
 	}
 
-	if(!brr_policy(policy)){
+/*	if(!brr_policy(policy)){*/
 		
 	
 		if (param->sched_priority < 0 ||
@@ -5923,7 +5923,7 @@ recheck:
 			printk(KERN_CRIT "BRR: Error condition 2\n");
 			return -EINVAL;
 			}
-	}
+/*	}*/
 
 	if(brr_policy(policy)){
 		printk(KERN_CRIT "BRR: \"policy\" var is BRR in __sched_setscheduler 3\n");
