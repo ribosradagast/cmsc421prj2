@@ -5827,7 +5827,9 @@ case SCHED_BRR:
 	Take sched_param->sched_priority and assign it to the task's PID
 	return 
 	*/
-	p->bid = bucketNumber;
+	p->bid = prio;
+	p->rt_priority = 50;
+	p->normal_prio = normal_prio(p);
 	printk(KERN_CRIT "BRR We just saved our bucket number into bid!  In sched.c line 5842\n");
 	break;
 case SCHED_NORMAL:
@@ -5842,9 +5844,10 @@ case SCHED_RR:
 
 	}
 
-
+if(policy!=SCHED_BRR){
 	p->rt_priority = prio;
 	p->normal_prio = normal_prio(p);
+	}
 
 	/* we are holding p->pi_lock already */
 	p->prio = rt_mutex_getprio(p);
