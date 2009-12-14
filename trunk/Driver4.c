@@ -1,8 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <linux/kernel.h>
-#include <linux/sched.h>
+#include <sched.h>
 #include <string.h>
 
 /*
